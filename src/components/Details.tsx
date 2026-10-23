@@ -271,6 +271,10 @@ export function MouseDetail({ id }: { id: string }) {
   const recentTransfer = eventsFor(state, id).find(
     (e) => e.type === "mouse.transfer",
   );
+  const phenotypeEvents = eventsFor(state, id).filter(
+    (e) =>
+      e.type === "care.record" && e.details.kind === "phenotype" && !e.voided,
+  );
   return (
     <>
       <section className={`mouse-profile-hero coat-${m.appearance.coat}`}>
@@ -475,10 +479,16 @@ export function MouseDetail({ id }: { id: string }) {
             </p>
           ))}
           <h3 className="spaced-heading">真实表型</h3>
-          <p className="body-copy">
-            {m.phenotype ||
-              "尚未登记真实表型。装饰头像不代表实际毛色、基因型或健康状态。"}
-          </p>
+          {m.phenotype && <p className="body-copy">{m.phenotype}</p>}
+          {phenotypeEvents.length ? (
+            <History events={phenotypeEvents} limit={3} />
+          ) : (
+            !m.phenotype && (
+              <p className="body-copy">
+                尚未登记真实表型。装饰头像不代表实际毛色、基因型或健康状态。
+              </p>
+            )
+          )}
           {m.notes && <p className="body-copy">{m.notes}</p>}
           {m.status === "active" && (
             <div className="action-row">

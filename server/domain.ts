@@ -11,6 +11,7 @@ import type {
   Settings,
 } from "../shared/types.js";
 import { careLabel } from "../shared/types.js";
+import { safePhotoLink } from "../shared/photos.js";
 import { addDays, daysBetween, todayIn, validDate } from "../shared/dates.js";
 import {
   appearanceFor,
@@ -1119,6 +1120,20 @@ export function applyCommand(
       need(careLabel[p.kind], "照护类型无效", "kind");
       const selected = ids(p.cageIds);
       need(selected.length, "请选择笼位");
+      const photoUrl = text(p.photoUrl, 2049);
+      need(
+        !photoUrl || safePhotoLink(photoUrl),
+        "请填写不含用户名或密码的 HTTPS 照片链接",
+        "photoUrl",
+      );
+      if (p.kind === "phenotype") {
+        need(
+          selected.length === 1 && p.mouseId,
+          "请为表型观察选择一只具体小鼠",
+          "mouseId",
+        );
+        need(text(p.notes), "请填写实际观察到的表型", "notes");
+      }
       const value = p.value === "" || p.value == null ? null : Number(p.value);
       need(
         value === null ||
@@ -1144,6 +1159,7 @@ export function applyCommand(
               kind: p.kind,
               value,
               observer: text(p.observer, 80),
+              photoUrl: photoUrl ? safePhotoLink(photoUrl) : "",
               experimentalFact: p.experimentalFact !== false,
             },
             litterId: p.litterId || undefined,

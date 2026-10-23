@@ -29,6 +29,73 @@ const setup = () => {
   }).id as string;
   return { s, run, c, m };
 };
+test("phenotype evidence preserves date, observer and photo independently from decorative appearance", () => {
+  const { s, run, c, m } = setup();
+  const appearance = structuredClone(s.mice[0].appearance);
+  run("care.record", {
+    cageIds: [c],
+    mouseId: m,
+    kind: "phenotype",
+    date: s.today,
+    observer: "记录人",
+    notes: "背部白斑",
+    photoUrl: "https://example.invalid/photo.jpg",
+    experimentalFact: false,
+  });
+  const observation = s.events.find((e) => e.type === "care.record")!;
+  assert.equal(observation.date, s.today);
+  assert.equal(observation.notes, "背部白斑");
+  assert.equal(observation.details.observer, "记录人");
+  assert.equal(
+    observation.details.photoUrl,
+    "https://example.invalid/photo.jpg",
+  );
+  assert.equal(observation.details.experimentalFact, false);
+  assert.deepEqual(s.mice[0].appearance, appearance);
+  const evidence = JSON.stringify(observation);
+  run("mouse.appearance", {
+    id: m,
+    appearance: appearanceFor(2),
+    locked: true,
+  });
+  assert.equal(JSON.stringify(observation), evidence);
+  for (const photoUrl of [
+    "javascript:alert(1)",
+    "http://example.invalid/a.jpg",
+    "https://user:password@example.invalid/a.jpg",
+  ]) {
+    const before = s.events.length;
+    assert.throws(() =>
+      run("care.record", {
+        cageIds: [c],
+        mouseId: m,
+        kind: "phenotype",
+        date: s.today,
+        notes: "观察",
+        photoUrl,
+      }),
+    );
+    assert.equal(s.events.length, before);
+  }
+  assert.throws(() =>
+    run("care.record", {
+      cageIds: [c],
+      kind: "phenotype",
+      date: s.today,
+      notes: "观察",
+    }),
+  );
+  const db = new Store(":memory:");
+  try {
+    db.save(s);
+    assert.equal(
+      JSON.stringify(db.read().events.find((e) => e.id === observation.id)),
+      evidence,
+    );
+  } finally {
+    db.close();
+  }
+});
 test("calendar date arithmetic, leap years and time zones", () => {
   assert.equal(addDays("2024-02-28", 1), "2024-02-29");
   assert.equal(daysBetween("2024-02-28", "2024-03-01"), 2);

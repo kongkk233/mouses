@@ -1,11 +1,24 @@
-import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
-import { ArrowLeft, X, AlertCircle, LoaderCircle } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import {
+  ArrowLeft,
+  X,
+  AlertCircle,
+  LoaderCircle,
+  ExternalLink,
+} from "lucide-react";
 import { useApp, useMutation } from "../context";
 import type { Event, Mouse } from "../../shared/types";
 import { ageText, shortDate } from "../../shared/dates";
 import { sexLabel } from "../../shared/types";
 import { MouseSprite } from "./MouseSprite";
 import { mouseTags } from "../selectors";
+import { safePhotoLink } from "../../shared/photos";
 export const Badge = ({
   children,
   tone = "muted",
@@ -236,9 +249,11 @@ export function History({
   events: Event[];
   limit?: number;
 }) {
+  const [shown, setShown] = useState(limit);
+  const { state } = useApp();
   return events.length ? (
     <div className="history-list">
-      {events.slice(0, limit).map((e) => (
+      {events.slice(0, shown).map((e) => (
         <article key={e.id} className={e.voided ? "voided" : ""}>
           <span className="history-dot" />
           <div>
@@ -248,6 +263,7 @@ export function History({
                 {new Date(e.createdAt).toLocaleTimeString("zh-CN", {
                   hour: "2-digit",
                   minute: "2-digit",
+                  timeZone: state.settings.timezone,
                 })}
               </span>
             </time>
@@ -256,11 +272,41 @@ export function History({
               {e.voided ? " · 已撤销" : ""}
             </strong>
             {e.notes && <p>{e.notes}</p>}
+            {e.type === "care.record" && (
+              <div className="history-evidence">
+                {typeof e.details.observer === "string" &&
+                  e.details.observer && <span>{e.details.observer}</span>}
+                {e.details.kind === "phenotype" && (
+                  <span>
+                    {e.details.experimentalFact === false
+                      ? "日常观察"
+                      : "实验事实"}
+                  </span>
+                )}
+                {safePhotoLink(e.details.photoUrl) && (
+                  <a
+                    href={safePhotoLink(e.details.photoUrl)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-button"
+                  >
+                    <ExternalLink size={13} />
+                    查看照片
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </article>
       ))}
-      {events.length > limit && (
-        <p className="muted">仅展示最近 {limit} 条记录</p>
+      {events.length > shown && (
+        <button
+          type="button"
+          className="text-button"
+          onClick={() => setShown((n) => n + limit)}
+        >
+          继续查看记录（还有 {events.length - shown} 条）
+        </button>
       )}
     </div>
   ) : (

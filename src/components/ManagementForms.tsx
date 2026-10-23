@@ -854,6 +854,8 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
     [notes, setNotes] = useState(""),
     [value, setValue] = useState(""),
     [observer, setObserver] = useState(""),
+    [photoUrl, setPhotoUrl] = useState(""),
+    [experimentalFact, setExperimentalFact] = useState(true),
     [mouseId, setMouseId] = useState(data.mouseId || ""),
     [planned, setPlanned] = useState(!!data.planned);
   return (
@@ -867,6 +869,8 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
         notes,
         value,
         observer,
+        photoUrl,
+        experimentalFact,
         mouseId,
         taskId: data.taskId,
         litterId: data.litterId,
@@ -939,7 +943,12 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
       </div>
       {selected.length === 1 && (
         <Field label="具体小鼠（可选）">
-          <select value={mouseId} onChange={(e) => setMouseId(e.target.value)}>
+          <select
+            name="mouseId"
+            value={mouseId}
+            onChange={(e) => setMouseId(e.target.value)}
+            required={!planned && kind === "phenotype"}
+          >
             <option value="">整个笼位</option>
             {cageMembers(state, selected[0]).map((m) => (
               <option key={m.id} value={m.id}>
@@ -948,6 +957,9 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
             ))}
           </select>
         </Field>
+      )}
+      {!planned && kind === "phenotype" && selected.length > 1 && (
+        <p className="field-note">表型观察请选择一个笼位和一只具体小鼠。</p>
       )}
       {!planned && kind === "weight" && (
         <Field label="体重 / 克">
@@ -963,8 +975,24 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
         </Field>
       )}
       <Field label="记录人（可选）">
-        <input value={observer} onChange={(e) => setObserver(e.target.value)} />
+        <input
+          name="observer"
+          value={observer}
+          onChange={(e) => setObserver(e.target.value)}
+        />
       </Field>
+      {!planned && (
+        <Field label="照片链接（可选）">
+          <input
+            name="photoUrl"
+            type="url"
+            maxLength={2048}
+            value={photoUrl}
+            onChange={(e) => setPhotoUrl(e.target.value)}
+            placeholder="https://"
+          />
+        </Field>
+      )}
       <Field
         label={
           kind === "phenotype"
@@ -975,8 +1003,10 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
         }
       >
         <textarea
+          name="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
+          required={!planned && kind === "phenotype"}
           placeholder={
             kind === "milestone"
               ? "例如：第一次睁眼，或第一次独立进食"
@@ -984,6 +1014,16 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
           }
         />
       </Field>
+      {!planned && kind === "phenotype" && (
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={experimentalFact}
+            onChange={(e) => setExperimentalFact(e.target.checked)}
+          />
+          作为实验事实记录
+        </label>
+      )}
     </FormShell>
   );
 }
