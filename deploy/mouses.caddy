@@ -1,0 +1,8 @@
+mouses.ninthflux.com {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:18326
+  header {
+    Strict-Transport-Security "max-age=31536000"
+    Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  }
+}

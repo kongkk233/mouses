@@ -1,0 +1,31 @@
+[Unit]
+Description=Mouse Nook colony care and durable notification scheduler
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mouse-nook
+Group=mouse-nook
+WorkingDirectory=/srv/mouse-nook/current
+EnvironmentFile=/etc/mouse-nook.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node --max-old-space-size=128 dist-server/server/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=75
+StateDirectory=mouse-nook
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/mouse-nook
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+MemoryMax=256M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
