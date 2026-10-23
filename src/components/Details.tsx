@@ -24,6 +24,7 @@ import {
   cageMembers,
   currentOccurrence,
   eventsFor,
+  familyRelations,
   mouseTags,
 } from "../selectors";
 import { ageText, daysBetween, shortDate } from "../../shared/dates";
@@ -793,7 +794,13 @@ export function BreedingTimeline({ breeding: b }: { breeding: Breeding }) {
     </section>
   );
 }
-export function LitterCard({ litter: l }: { litter: Litter }) {
+export function LitterCard({
+  litter: l,
+  candidate = false,
+}: {
+  litter: Litter;
+  candidate?: boolean;
+}) {
   const { state, open } = useApp(),
     babies = state.mice.filter((m) => m.birthLitterId === l.id),
     alive = babies.filter((m) => m.status === "active"),
@@ -811,6 +818,7 @@ export function LitterCard({ litter: l }: { litter: Litter }) {
       <div>
         <strong>
           {l.code}
+          {candidate && <Badge tone="lilac">候选关联</Badge>}
           <Badge tone={l.nursing ? "sage" : "muted"}>
             {l.nursing ? "哺乳中" : "哺育已结束"}
           </Badge>
@@ -843,7 +851,7 @@ function FamilyNode({
     >
       <span className="family-role">
         {label}
-        {candidate ? " · 候选" : ""}
+        {candidate && !label.includes("候选") ? " · 候选" : ""}
       </span>
       <MouseSprite mouse={mouse} />
       <strong>
@@ -873,9 +881,8 @@ export function Family({ mouse: m }: { mouse: Mouse }) {
       (x) =>
         x.id !== m.id && m.birthLitterId && x.birthLitterId === m.birthLitterId,
     ),
-    children = state.litters.filter(
-      (l) => l.motherId === m.id || l.fatherId === m.id,
-    ),
+    relations = familyRelations(state, m),
+    children = relations.litters,
     foster = state.mice.find((x) => x.id === m.fosterMotherId);
   return (
     <section className={`family-theater ${tree ? "tree-mode" : ""}`}>
@@ -926,6 +933,16 @@ export function Family({ mouse: m }: { mouse: Mouse }) {
       <div className="family-center">
         <FamilyNode mouse={m} label="这位小主角" />
       </div>
+      {relations.candidateFathers.length > 0 && (
+        <section className="family-candidates">
+          <h3>候选爸爸</h3>
+          <div className="family-siblings">
+            {relations.candidateFathers.map((f) => (
+              <FamilyNode key={f.id} mouse={f} label="候选爸爸" candidate />
+            ))}
+          </div>
+        </section>
+      )}
       {foster && (
         <div className="foster-connection">
           <Badge tone="lilac">照顾过 · 寄养关系</Badge>
@@ -959,6 +976,56 @@ export function Family({ mouse: m }: { mouse: Mouse }) {
           <Sprout size={20} />
           尚未登记子代
         </div>
+      )}
+      {relations.candidateLitters.length > 0 && (
+        <details className="sibling-details">
+          <summary>
+            候选关联窝次 · {relations.candidateLitters.length} 窝
+          </summary>
+          {relations.candidateLitters.map((l) => (
+            <LitterCard key={l.id} litter={l} candidate />
+          ))}
+        </details>
+      )}
+      {relations.ungroupedChildren.length > 0 && (
+        <details
+          className="sibling-details"
+          open={!tree && relations.ungroupedChildren.length <= 20}
+        >
+          <summary>
+            未登记窝次的子代 · {relations.ungroupedChildren.length} 只
+          </summary>
+          <div className="family-siblings">
+            {relations.ungroupedChildren.map((child) => (
+              <FamilyNode
+                key={child.id}
+                mouse={child}
+                label="子代"
+                candidate={relations.candidateChildIds.has(child.id)}
+              />
+            ))}
+          </div>
+        </details>
+      )}
+      {relations.partners.length > 0 && (
+        <details className="sibling-details">
+          <summary>配种对象 · {relations.partners.length} 只</summary>
+          <div className="family-siblings">
+            {relations.partners.map((partner) => (
+              <FamilyNode key={partner.id} mouse={partner} label="配种对象" />
+            ))}
+          </div>
+        </details>
+      )}
+      {relations.cageMates.length > 0 && (
+        <details className="sibling-details">
+          <summary>当前同笼 · {relations.cageMates.length} 只</summary>
+          <div className="family-siblings">
+            {relations.cageMates.map((mate) => (
+              <FamilyNode key={mate.id} mouse={mate} label="同笼成员" />
+            ))}
+          </div>
+        </details>
       )}
       <p className="field-note">
         关系来自档案，跨笼和归档不切断家系。候选关系使用虚线。
@@ -1039,6 +1106,27 @@ export function LitterDetail({ id }: { id: string }) {
           </button>
         ))}
       </div>
+      {(!father || l.fatherStatus === "candidate") &&
+        l.candidateFatherIds.some((id) => id !== father?.id) && (
+          <section className="family-candidates">
+            <h3>候选爸爸</h3>
+            <div className="family-siblings">
+              {state.mice
+                .filter(
+                  (m) =>
+                    l.candidateFatherIds.includes(m.id) && m.id !== father?.id,
+                )
+                .map((candidate) => (
+                  <FamilyNode
+                    key={candidate.id}
+                    mouse={candidate}
+                    label="候选爸爸"
+                    candidate
+                  />
+                ))}
+            </div>
+          </section>
+        )}
       <div className="nursing-status">
         <Badge tone={l.nursing ? "sage" : "muted"}>
           {l.nursing ? "实际哺乳中" : "哺育已结束"}

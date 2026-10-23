@@ -93,3 +93,68 @@ export function eventsFor(s: AppState, id: string) {
         b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
     );
 }
+export function familyRelations(s: AppState, mouse: Mouse) {
+  const birthLitter = s.litters.find((l) => l.id === mouse.birthLitterId);
+  const candidates =
+    mouse.fatherId && mouse.fatherStatus === "confirmed"
+      ? []
+      : birthLitter?.candidateFatherIds || [];
+  const candidateFathers = s.mice.filter(
+    (m) => candidates.includes(m.id) && m.id !== mouse.fatherId,
+  );
+  const confirmedChildren = s.mice.filter(
+    (m) =>
+      (m.motherId === mouse.id && m.motherStatus === "confirmed") ||
+      (m.fatherId === mouse.id && m.fatherStatus === "confirmed"),
+  );
+  const candidateChildren = s.mice.filter(
+    (m) =>
+      !confirmedChildren.includes(m) &&
+      ((m.motherId === mouse.id && m.motherStatus === "candidate") ||
+        (m.fatherId === mouse.id && m.fatherStatus === "candidate") ||
+        ((!m.fatherId || m.fatherStatus === "candidate") &&
+          s.litters.some(
+            (l) =>
+              l.id === m.birthLitterId &&
+              l.candidateFatherIds.includes(mouse.id),
+          ))),
+  );
+  const litters = s.litters.filter(
+    (l) =>
+      confirmedChildren.some((m) => m.birthLitterId === l.id) ||
+      (!s.mice.some((m) => m.birthLitterId === l.id) &&
+        (l.motherId === mouse.id ||
+          (l.fatherId === mouse.id && l.fatherStatus === "confirmed"))),
+  );
+  const candidateLitters = s.litters.filter(
+    (l) =>
+      !litters.includes(l) &&
+      (candidateChildren.some((m) => m.birthLitterId === l.id) ||
+        (!s.mice.some((m) => m.birthLitterId === l.id) &&
+          (l.candidateFatherIds.includes(mouse.id) ||
+            (l.fatherId === mouse.id && l.fatherStatus === "candidate")))),
+  );
+  const partnerIds = new Set(
+    s.breedings.flatMap((b) =>
+      b.motherId === mouse.id
+        ? b.candidateFatherIds
+        : b.candidateFatherIds.includes(mouse.id)
+          ? [b.motherId]
+          : [],
+    ),
+  );
+  return {
+    candidateFathers,
+    litters,
+    candidateLitters,
+    ungroupedChildren: [...confirmedChildren, ...candidateChildren].filter(
+      (m) => !m.birthLitterId,
+    ),
+    candidateChildIds: new Set(candidateChildren.map((m) => m.id)),
+    partners: s.mice.filter((m) => partnerIds.has(m.id)),
+    cageMates:
+      mouse.status === "active" && mouse.cageId
+        ? cageMembers(s, mouse.cageId).filter((m) => m.id !== mouse.id)
+        : [],
+  };
+}
