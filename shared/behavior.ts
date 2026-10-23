@@ -52,5 +52,9 @@ export function portraitPose(
   appearance?: Pick<Appearance, "expression">,
 ): Pose {
   if (mouse?.weaningStatus === "unweaned") return "baby";
-  return appearance?.expression === "sleepy" ? "sleep" : "idle";
+  return appearance?.expression === "sleepy"
+    ? "sleep"
+    : appearance?.expression === "gentle"
+      ? "groom"
+      : "idle";
 }

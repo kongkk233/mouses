@@ -3,7 +3,7 @@ import type { Appearance, Cage, Mouse } from "../../shared/types";
 import { useApp } from "../context";
 import { cageMembers } from "../selectors";
 import { decorativePose, portraitPose, type Pose } from "../../shared/behavior";
-import { SPRITE_VERSION } from "../../shared/generated-assets";
+import { SPRITE_VERSION, SPRITE_PARTS } from "../../shared/generated-assets";
 export function MouseSprite({
   mouse,
   appearance,
@@ -20,11 +20,13 @@ export function MouseSprite({
   const a = appearance || mouse?.appearance;
   const coat = a?.coat || "cream";
   const [failed, setFailed] = useState(false);
-  const source = `/assets/mice/${coat}-${pose || portraitPose(mouse, a)}.webp?v=${SPRITE_VERSION}`;
+  const key = `${coat}-${pose || portraitPose(mouse, a)}`;
+  const source = `/assets/mice/${key}.webp?v=${SPRITE_VERSION}`;
+  const parts = SPRITE_PARTS[key];
   const shape = {
     ...style,
     "--body-scale": a?.body === "slender" ? ".94" : "1.04",
-    "--ear-scale": a?.ears === "large" ? "1.035" : "1",
+    "--ear-scale": "1",
     "--face-scale": a?.face === "pointed" ? "1.02" : "1",
     "--tail-scale": a?.tail === "long" ? "1.03" : "1",
   } as CSSProperties;
@@ -39,7 +41,7 @@ export function MouseSprite({
         alt=""
         draggable="false"
       />
-      {a?.pattern !== "solid" && (
+      {a && a.pattern !== "solid" && (
         <span
           className="fur-pattern"
           style={{
@@ -47,6 +49,43 @@ export function MouseSprite({
             WebkitMaskImage: `url(${source})`,
           }}
         />
+      )}
+      {!failed && a && a.eyes !== "black" && parts?.eyes.length > 0 && (
+        <span className="eyes-layer" aria-hidden="true">
+          {parts.eyes.map((eye, i) => (
+            <span
+              key={i}
+              className="iris-patch"
+              style={{
+                left: `${eye.x}%`,
+                top: `${eye.y}%`,
+                width: `${eye.width}%`,
+                height: `${eye.height}%`,
+              }}
+            />
+          ))}
+        </span>
+      )}
+      {!failed && a?.ears === "large" && parts?.ears.length > 0 && (
+        <span className="ear-layer" aria-hidden="true">
+          {parts.ears.map((ear, i) => {
+            const mask = `radial-gradient(ellipse ${ear.width / 2}% ${ear.height / 2}% at ${ear.x}% ${ear.y}%, #000 78%, transparent 100%)`;
+            return (
+              <img
+                key={i}
+                className="ear-piece"
+                src={source}
+                alt=""
+                draggable="false"
+                style={{
+                  maskImage: mask,
+                  WebkitMaskImage: mask,
+                  transformOrigin: `${ear.x}% ${ear.y + ear.height / 2}%`,
+                }}
+              />
+            );
+          })}
+        </span>
       )}
     </span>
   );

@@ -1042,10 +1042,36 @@ svg {
   background: linear-gradient(0deg, #fff5dc 0%, #fff5dc80 16%, transparent 25%);
 }
 .eyes-ruby {
-  filter: sepia(0.08) saturate(1.07);
+  --iris-color: #a83d59;
 }
 .eyes-brown {
-  filter: sepia(0.06);
+  --iris-color: #704322;
+}
+.eyes-layer,
+.ear-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: scale(
+    calc(var(--body-scale, 1) * var(--face-scale, 1) * var(--tail-scale, 1)),
+    1
+  );
+  transform-origin: 50% 90%;
+}
+.eyes-layer {
+  mix-blend-mode: screen;
+  opacity: 0.8;
+}
+.iris-patch {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--iris-color);
+}
+.ear-layer .ear-piece {
+  position: absolute;
+  inset: 0;
+  transform: scale(1.15);
 }
 .mouse-name-bubble {
   display: none;

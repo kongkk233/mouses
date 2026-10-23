@@ -73,4 +73,8 @@ test("life-stage boundaries override personality and portraits preserve the regi
     portraitPose({ weaningStatus: "unknown" }, { expression: "curious" }),
     "idle",
   );
+  assert.equal(
+    portraitPose({ weaningStatus: "weaned" }, { expression: "gentle" }),
+    "groom",
+  );
 });
