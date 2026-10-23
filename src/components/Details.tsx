@@ -911,8 +911,17 @@ export function Family({ mouse: m }: { mouse: Mouse }) {
         />
       </div>
       <div className="family-connectors">
-        <span />
-        <span />
+        <span
+          className={
+            m.motherStatus === "candidate" || !mother ? "candidate" : ""
+          }
+        />
+        <span
+          className={
+            m.fatherStatus === "candidate" || !father ? "candidate" : ""
+          }
+        />
+        <i aria-hidden="true" />
       </div>
       <div className="family-center">
         <FamilyNode mouse={m} label="这位小主角" />

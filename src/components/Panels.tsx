@@ -152,7 +152,6 @@ function PanelLayer({
   }
   return (
     <Drawer
-      key={`${kind}:${id || ""}:${stack.length}`}
       title={titles[kind] || "小窝"}
       wide={["mouse", "litter", "cage"].includes(kind)}
     >

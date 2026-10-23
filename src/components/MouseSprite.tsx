@@ -152,7 +152,15 @@ export function CageScene({
     const nursing = state.litters.some(
       (l) => l.nursing && (l.fosterMotherId || l.motherId) === m.id,
     );
-    if (nursing) return "sleep";
+    if (nursing) return phase % 4 === 3 ? "groom" : "sleep";
+    if (
+      state.breedings.some(
+        (b) => b.motherId === m.id && b.status === "confirmed",
+      )
+    )
+      return (["idle", "sleep", "groom", "stretch", "idle", "sleep"] as Pose[])[
+        (m.avatarSeed + phase) % 6
+      ];
     return routine[((m.avatarSeed % 8) + i * 2 + phase) % routine.length];
   });
   // Occupancy slots: only one drinking/eating position, at most two moving mice.

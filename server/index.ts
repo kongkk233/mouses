@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ws://127.0.0.1:* ws://localhost:*; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'",
+    `default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'${process.env.NODE_ENV === "production" ? "" : " ws://127.0.0.1:* ws://localhost:*"}; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'`,
   );
   const password = process.env.APP_PASSWORD;
   if (password) {
