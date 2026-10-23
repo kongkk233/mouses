@@ -10,6 +10,8 @@
 
 产物为 `public/assets/mice/*.webp`、`public/assets/habitat.webp`、`public/icons/*.png`；运行 `node scripts/prepare-assets.mjs` 重建。没有通过编程绘图替代鼠鼠插画；CSS 只负责轻量变换、花纹叠层及动效。
 
+图集分割按真实 alpha 连通轮廓识别每张图的 16 只角色，并保留原始毛发、尾巴和抗锯齿像素。不能按等宽网格直接切：伸展姿态会越过名义网格，导致幼鼠边缘带入邻格碎片。产物带内容版本号，更新后浏览器不会继续使用旧分割结果。
+
 ## 最终提示词
 
 ### 基础精灵（透明）

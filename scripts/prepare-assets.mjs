@@ -1,30 +1,146 @@
 import sharp from "sharp";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 await mkdir("public/assets/mice", { recursive: true });
 const coats = ["ivory", "cream", "silver", "cocoa"];
 const sheets = [
   ["mouse-atlas-source.png", ["idle", "sleep", "eat", "explore"]],
   ["mouse-actions-source.png", ["drink", "groom", "stretch", "baby"]],
 ];
+const version = createHash("sha256");
+// Generated atlases are only approximately aligned. Isolate the actual alpha
+// components before framing them, so a neighbouring paw cannot enter a tile.
+function characters(data, width, height) {
+  const total = width * height,
+    seen = new Uint8Array(total),
+    labels = new Uint16Array(total),
+    distance = new Uint8Array(total),
+    queue = new Int32Array(total),
+    parts = [];
+  const neighbours = (p) => {
+    const x = p % width,
+      y = Math.floor(p / width);
+    return [
+      x ? p - 1 : -1,
+      x < width - 1 ? p + 1 : -1,
+      y ? p - width : -1,
+      y < height - 1 ? p + width : -1,
+    ];
+  };
+  for (let p = 0; p < total; p++) {
+    if (seen[p] || data[p * 4 + 3] < 100) continue;
+    let head = 0,
+      tail = 1,
+      minX = width,
+      minY = height,
+      maxX = 0,
+      maxY = 0;
+    queue[0] = p;
+    seen[p] = 1;
+    while (head < tail) {
+      const at = queue[head++],
+        x = at % width,
+        y = Math.floor(at / width);
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+      for (const next of neighbours(at))
+        if (next >= 0 && !seen[next] && data[next * 4 + 3] >= 100) {
+          seen[next] = 1;
+          queue[tail++] = next;
+        }
+    }
+    if (tail < 5000) continue;
+    const id = parts.length + 1;
+    for (let i = 0; i < tail; i++) labels[queue[i]] = id;
+    parts.push({ id, minX, minY, maxX, maxY });
+  }
+  if (parts.length !== 16)
+    throw new Error(
+      `Expected 16 isolated mice; found ${parts.length}. Inspect the atlas before rebuilding.`,
+    );
+  // Grow into the original antialiased fur and whiskers. Multi-source growth
+  // preserves their RGBA values and cannot claim another mouse's opaque core.
+  let head = 0,
+    tail = 0;
+  for (let p = 0; p < total; p++) if (labels[p]) queue[tail++] = p;
+  while (head < tail) {
+    const at = queue[head++];
+    if (distance[at] >= 24) continue;
+    for (const next of neighbours(at))
+      if (next >= 0 && !labels[next] && data[next * 4 + 3] > 0) {
+        labels[next] = labels[at];
+        distance[next] = distance[at] + 1;
+        queue[tail++] = next;
+      }
+  }
+  const byRow = parts.sort((a, b) => a.minY - b.minY);
+  return {
+    labels,
+    parts: Array.from({ length: 4 }, (_, row) =>
+      byRow.slice(row * 4, row * 4 + 4).sort((a, b) => a.minX - b.minX),
+    ).flat(),
+  };
+}
 for (const [source, poses] of sheets) {
-  const file = `design/source/${source}`,
-    meta = await sharp(file).metadata();
+  const { data, info } = await sharp(`design/source/${source}`)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { labels, parts } = characters(data, info.width, info.height);
   for (let y = 0; y < 4; y++)
     for (let x = 0; x < 4; x++) {
-      const left = Math.round((x * meta.width) / 4),
-        top = Math.round((y * meta.height) / 4);
-      await sharp(file)
-        .extract({
-          left,
-          top,
-          width: Math.round(((x + 1) * meta.width) / 4) - left,
-          height: Math.round(((y + 1) * meta.height) / 4) - top,
-        })
-        .resize(320, 320, { fit: "contain", background: "#00000000" })
+      const part = parts[y * 4 + x],
+        left = Math.max(0, part.minX - 24),
+        top = Math.max(0, part.minY - 24),
+        right = Math.min(info.width - 1, part.maxX + 24),
+        bottom = Math.min(info.height - 1, part.maxY + 24),
+        width = right - left + 1,
+        height = bottom - top + 1,
+        pixels = Buffer.alloc(width * height * 4),
+        side = Math.max(Math.ceil(info.width / 4), width, height);
+      for (let py = 0; py < height; py++)
+        for (let px = 0; px < width; px++) {
+          const original = (top + py) * info.width + left + px;
+          if (labels[original] === part.id)
+            data.copy(
+              pixels,
+              (py * width + px) * 4,
+              original * 4,
+              original * 4 + 4,
+            );
+        }
+      const frame = await sharp({
+        create: {
+          width: side,
+          height: side,
+          channels: 4,
+          background: "#00000000",
+        },
+      })
+        .composite([
+          {
+            input: pixels,
+            raw: { width, height, channels: 4 },
+            left: Math.floor((side - width) / 2),
+            top: side - height,
+          },
+        ])
+        .png()
+        .toBuffer();
+      const image = await sharp(frame)
+        .resize(320, 320)
         .webp({ quality: 86, alphaQuality: 95 })
-        .toFile(`public/assets/mice/${coats[y]}-${poses[x]}.webp`);
+        .toBuffer();
+      version.update(image);
+      await writeFile(`public/assets/mice/${coats[y]}-${poses[x]}.webp`, image);
     }
 }
+await writeFile(
+  "shared/generated-assets.ts",
+  `// Generated by scripts/prepare-assets.mjs.\nexport const SPRITE_VERSION = "${version.digest("hex").slice(0, 12)}";\n`,
+);
 for (const size of [192, 512]) {
   const pic = await sharp("public/assets/mice/cream-idle.webp")
     .resize(Math.round(size * 0.82))

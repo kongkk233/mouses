@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { AppState } from "../shared/types";
 import { api, ApiError } from "./api";
+import { SPRITE_VERSION } from "../shared/generated-assets";
 export interface Panel {
   kind: string;
   id?: string;
@@ -134,7 +135,10 @@ export function Provider({ children }: { children: ReactNode }) {
   if (!state)
     return (
       <div className="boot">
-        <img src="/assets/mice/cream-sleep.webp" alt="熟睡的鼠鼠" />
+        <img
+          src={`/assets/mice/cream-sleep.webp?v=${SPRITE_VERSION}`}
+          alt="熟睡的鼠鼠"
+        />
         <h1>小窝正在醒来…</h1>
         {loadError ? (
           <>

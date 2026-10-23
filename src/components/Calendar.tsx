@@ -1,3 +1,4 @@
+import { SPRITE_VERSION } from "../../shared/generated-assets";
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
@@ -559,7 +560,7 @@ function LeafIcon() {
   return (
     <img
       className="agenda-mouse"
-      src="/assets/mice/cream-sleep.webp"
+      src={`/assets/mice/cream-sleep.webp?v=${SPRITE_VERSION}`}
       alt="休息中的鼠鼠"
     />
   );

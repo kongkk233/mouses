@@ -3,6 +3,7 @@ import type { Appearance, Cage, Mouse } from "../../shared/types";
 import { useApp } from "../context";
 import { cageMembers } from "../selectors";
 import { decorativePose, portraitPose, type Pose } from "../../shared/behavior";
+import { SPRITE_VERSION } from "../../shared/generated-assets";
 export function MouseSprite({
   mouse,
   appearance,
@@ -19,7 +20,7 @@ export function MouseSprite({
   const a = appearance || mouse?.appearance;
   const coat = a?.coat || "cream";
   const [failed, setFailed] = useState(false);
-  const source = `/assets/mice/${coat}-${pose || portraitPose(mouse, a)}.webp`;
+  const source = `/assets/mice/${coat}-${pose || portraitPose(mouse, a)}.webp?v=${SPRITE_VERSION}`;
   const shape = {
     ...style,
     "--body-scale": a?.body === "slender" ? ".94" : "1.04",
