@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1050" viewBox="0 0 1440 1050" role="img" aria-labelledby="title desc">
+  <title id="title">鼠鼠小窝 · 粉色鼠笼首页静态概念图</title>
+  <desc id="desc">浅粉色首页包含鼠笼和小鼠视图切换、搜索、两个鼠笼卡片及新增入口。A001 有三只小鼠，分别表现喝水、吃饭和睡觉。B002 有一只母鼠和三只幼鼠。每个卡片下方显示真实编号、基因型、周龄和换笼日期。本图为静态设计示意，非运行中的应用。</desc>
+  <defs>
+    <style>
+      text{font-family:"PingFang SC","Microsoft YaHei",sans-serif;fill:#4A3040}
+      .muted{fill:#765F6B}.strong{font-weight:600}.tiny{font-size:14px}.small{font-size:16px}.body{font-size:18px}.code{font-size:19px;font-weight:600}.pink{fill:#B83D70}
+      .line{stroke:#EEDCE5;stroke-width:1.5}.outline{stroke:#A98C9C;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+    <linearGradient id="scene" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFF7FA"/><stop offset="1" stop-color="#F8E3EC"/>
+    </linearGradient>
+    <linearGradient id="nest" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EED1BC"/><stop offset="1" stop-color="#D9B498"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="145%">
+      <feDropShadow dx="0" dy="5" stdDeviation="10" flood-color="#93536F" flood-opacity=".07"/>
+    </filter>
+    <g id="sleeping-mouse">
+      <path d="M-30 12 C-68 27-75-1-51-3" fill="none" stroke="#D8A4AF" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="5" rx="42" ry="28" fill="#E3DDE1" stroke="#B9ABB3" stroke-width="2"/>
+      <ellipse cx="25" cy="10" rx="27" ry="21" fill="#F6F3F5" stroke="#B9ABB3" stroke-width="2"/>
+      <circle cx="14" cy="-9" r="13" fill="#E9E1E6" stroke="#B9ABB3" stroke-width="2"/>
+      <circle cx="14" cy="-9" r="7" fill="#EDBBC9"/>
+      <path d="M31 8q5 5 10 0" fill="none" stroke="#66505E" stroke-width="2.4" stroke-linecap="round"/>
+      <ellipse cx="50" cy="15" rx="4" ry="3" fill="#CE8EA3"/>
+      <ellipse cx="32" cy="18" rx="5" ry="3" fill="#F0C3D1"/>
+      <path d="M46 16l11 4m-11-1 8 6" fill="none" stroke="#A9919E" stroke-width="1.2"/>
+    </g>
+    <g id="eating-mouse">
+      <path d="M-23 35c-55 12-56-24-31-20" fill="none" stroke="#D8A4AF" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="18" rx="29" ry="38" fill="#FFF9EC" stroke="#C8B7A6" stroke-width="2"/>
+      <ellipse cx="-17" cy="-27" rx="13" ry="15" fill="#FFF9EC" stroke="#C8B7A6" stroke-width="2"/>
+      <ellipse cx="18" cy="-27" rx="13" ry="15" fill="#FFF9EC" stroke="#C8B7A6" stroke-width="2"/>
+      <ellipse cx="-17" cy="-27" rx="7" ry="9" fill="#F2C5D2"/><ellipse cx="18" cy="-27" rx="7" ry="9" fill="#F2C5D2"/>
+      <path d="M-27-8Q-24-30 0-28Q26-28 29-8Q26 16 0 23Q-26 15-27-8" fill="#FFFCF4" stroke="#C8B7A6" stroke-width="2"/>
+      <ellipse cx="-11" cy="-4" rx="3" ry="4" fill="#5C4553"/><ellipse cx="12" cy="-4" rx="3" ry="4" fill="#5C4553"/>
+      <ellipse cx="0" cy="9" rx="4" ry="3" fill="#CE8EA3"/>
+      <ellipse cx="-19" cy="6" rx="5" ry="3" fill="#F0C3D1"/><ellipse cx="20" cy="6" rx="5" ry="3" fill="#F0C3D1"/>
+      <path d="M-21 26Q-8 18 0 27M20 25Q9 18 0 27" fill="none" stroke="#C8B7A6" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="0" cy="26" rx="6" ry="9" fill="#D9AE79"/>
+      <ellipse cx="-15" cy="51" rx="10" ry="5" fill="#EFC8CF"/><ellipse cx="16" cy="51" rx="10" ry="5" fill="#EFC8CF"/>
+    </g>
+    <g id="drinking-mouse">
+      <path d="M-23 31c-35 20-65 5-47-13" fill="none" stroke="#D8A4AF" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="0" cy="10" rx="30" ry="38" fill="#F6F3F5" stroke="#BAACB5" stroke-width="2"/>
+      <path d="M-12-27Q12-49 40-35L52-23Q30-1 6 2Q-16-5-12-27" fill="#FFFCFE" stroke="#BAACB5" stroke-width="2"/>
+      <ellipse cx="0" cy="-32" rx="14" ry="16" fill="#F6F3F5" stroke="#BAACB5" stroke-width="2"/>
+      <ellipse cx="0" cy="-32" rx="8" ry="9" fill="#F0BFCE"/>
+      <circle cx="29" cy="-25" r="3.4" fill="#5C4553"/><ellipse cx="51" cy="-23" rx="4" ry="3" fill="#CE8EA3"/>
+      <ellipse cx="25" cy="-14" rx="5" ry="3" fill="#F0C3D1"/>
+      <path d="M14 8l15-11" fill="none" stroke="#BAACB5" stroke-width="6" stroke-linecap="round"/>
+      <ellipse cx="-12" cy="44" rx="12" ry="5" fill="#EFC8CF"/><ellipse cx="14" cy="43" rx="12" ry="5" fill="#EFC8CF"/>
+    </g>
+    <g id="pup">
+      <path d="M-18 5q-16 9-18-3" fill="none" stroke="#DBABB8" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="0" cy="0" rx="23" ry="15" fill="#F7E0E8" stroke="#CDAEBB" stroke-width="1.5"/>
+      <circle cx="9" cy="-10" r="7" fill="#EFC4D2" stroke="#CDAEBB" stroke-width="1.4"/>
+      <path d="M15 0q3 3 6 0" fill="none" stroke="#826776" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="23" cy="5" r="2.5" fill="#CC91A7"/>
+    </g>
+  </defs>
+
+  <rect width="1440" height="1050" fill="#FFF8FB"/>
+  <rect width="1440" height="112" fill="#FFFFFF"/>
+  <path d="M0 111H1440" class="line"/>
+  <g transform="translate(60 56)">
+    <circle cx="0" cy="0" r="25" fill="#FCE7EF"/>
+    <circle cx="-10" cy="-8" r="8" fill="#D781A5"/><circle cx="10" cy="-8" r="8" fill="#D781A5"/>
+    <ellipse cy="4" rx="16" ry="13" fill="#FFFFFF"/>
+    <circle cx="-6" cy="2" r="2" fill="#765465"/><circle cx="6" cy="2" r="2" fill="#765465"/>
+    <ellipse cy="9" rx="3" ry="2" fill="#CB7F9D"/>
+  </g>
+  <text x="102" y="65" font-size="28" font-weight="600">鼠鼠小窝</text>
+  <rect x="490" y="32" width="480" height="48" rx="14" fill="#FFF8FB" stroke="#EEDCE5"/>
+  <circle cx="516" cy="54" r="7" fill="none" stroke="#987986" stroke-width="2"/><path d="m521 60 5 5" stroke="#987986" stroke-width="2" stroke-linecap="round"/>
+  <text x="546" y="62" class="small muted">搜索编号、基因型、笼号</text>
+  <rect x="990" y="32" width="126" height="48" rx="14" fill="#FCE7EF"/>
+  <rect x="1004" y="48" width="16" height="16" rx="3" fill="none" stroke="#B83D70" stroke-width="1.5"/><path d="M1004 53h16m-12-8v5m8-5v5" fill="none" stroke="#B83D70" stroke-width="1.5"/>
+  <text x="1030" y="62" class="small pink">换笼日历</text>
+  <rect x="1130" y="32" width="126" height="48" rx="14" fill="#FFF0DC"/>
+  <path d="M1150 58v-7a7 7 0 0 1 14 0v7l3 4h-20zM1154 67h6" fill="none" stroke="#A34A16" stroke-width="2" stroke-linecap="round"/>
+  <text x="1176" y="63" class="body" style="fill:#A34A16">提醒 2</text>
+  <text x="1297" y="63" class="body muted">设置</text>
+
+  <rect x="48" y="146" width="216" height="52" rx="16" fill="#F4E8EE"/>
+  <rect x="53" y="151" width="103" height="42" rx="12" fill="#FFFFFF"/>
+  <text x="104" y="179" text-anchor="middle" class="body strong pink">鼠笼</text>
+  <text x="208" y="179" text-anchor="middle" class="body muted">小鼠</text>
+  <rect x="295" y="148" width="150" height="48" rx="12" fill="#FFFFFF" stroke="#EEDCE5"/>
+  <text x="315" y="179" class="small">全部笼位</text><path d="m419 169 5 5 5-5" fill="none" stroke="#765F6B" stroke-width="1.8"/>
+  <rect x="458" y="148" width="150" height="48" rx="12" fill="#FFFFFF" stroke="#EEDCE5"/>
+  <text x="478" y="179" class="small">繁殖状态</text><path d="m582 169 5 5 5-5" fill="none" stroke="#765F6B" stroke-width="1.8"/>
+  <text x="1260" y="179" class="small muted">动画</text><rect x="1314" y="159" width="54" height="28" rx="14" fill="#B83D70"/><circle cx="1354" cy="173" r="10" fill="#FFFFFF"/>
+
+  <!-- Card A001 -->
+  <rect x="48" y="228" width="660" height="652" rx="24" fill="#FFFFFF" stroke="#EEDCE5" filter="url(#shadow)"/>
+  <text x="76" y="277" font-size="24" font-weight="600">A001</text>
+  <rect x="160" y="250" width="70" height="36" rx="12" fill="#F7EEF3"/><text x="195" y="274" text-anchor="middle" class="body">3/5</text>
+  <rect x="553" y="252" width="104" height="32" rx="11" fill="#FFF0DC"/><text x="605" y="274" text-anchor="middle" class="small" style="fill:#A34A16">1 条提醒</text>
+  <text x="673" y="278" text-anchor="middle" font-size="24" class="muted">⋯</text>
+  <rect x="72" y="308" width="612" height="256" rx="20" fill="url(#scene)"/>
+  <path d="M72 505Q225 469 378 497Q537 476 684 505V544Q684 564 664 564H92Q72 564 72 544Z" fill="#EFD6C3"/>
+  <path d="m112 536 16-4m41 14 18-3m97-20 13 5m104 18 17-4m63-20 15 4m85 16 18-3m31 7 10-3" stroke="#D9B99F" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="190" cy="510" rx="82" ry="30" fill="url(#nest)"/>
+  <ellipse cx="190" cy="501" rx="65" ry="22" fill="#E8CBB6"/>
+  <use href="#sleeping-mouse" transform="translate(191 477) scale(1.08)"/>
+  <text x="206" y="422" class="strong" style="fill:#AD839B;font-size:19px">z</text><text x="223" y="405" class="strong" style="fill:#BA9AAE;font-size:14px">z</text>
+  <rect x="579" y="327" width="49" height="82" rx="13" fill="#F9FEFF" stroke="#B2C5D0" stroke-width="2"/>
+  <path d="M582 361Q604 368 625 361V394Q625 405 614 405H593Q582 405 582 394Z" fill="#CCE1EA"/>
+  <rect x="576" y="325" width="55" height="13" rx="5" fill="#DFB4C6"/>
+  <path d="M603 408v22l-16 15" fill="none" stroke="#A2ADB8" stroke-width="5" stroke-linecap="round"/>
+  <use href="#drinking-mouse" transform="translate(535 467)"/>
+  <ellipse cx="378" cy="530" rx="56" ry="13" fill="#DBB6C3"/>
+  <path d="M323 511h110l-10 24q-45 12-90 0z" fill="#E5B2C4" stroke="#C991AA" stroke-width="2"/>
+  <ellipse cx="378" cy="511" rx="55" ry="13" fill="#F3D7E2" stroke="#C991AA" stroke-width="2"/>
+  <ellipse cx="364" cy="509" rx="8" ry="4" fill="#C6A075"/><ellipse cx="384" cy="513" rx="9" ry="4" fill="#D5B58C"/><ellipse cx="399" cy="507" rx="7" ry="4" fill="#C6A075"/>
+  <use href="#eating-mouse" transform="translate(375 447) scale(.88)"/>
+  <text x="72" y="610" class="tiny muted">编号 / 基因型</text><text x="457" y="610" class="tiny muted">周龄</text>
+  <circle cx="89" cy="647" r="13" fill="#F2EDF0"/><text x="116" y="653" class="code">M001</text><text x="212" y="653" class="small muted">WT</text><text x="359" y="653" class="small muted">♂</text><text x="457" y="653" class="body">9周3天</text>
+  <path d="M76 675H680" class="line"/>
+  <circle cx="89" cy="701" r="13" fill="#FBF0D9"/><text x="116" y="707" class="code">M002</text><text x="212" y="707" class="small muted">KO</text><text x="359" y="707" class="small muted">♀</text><text x="457" y="707" class="body">10周0天</text>
+  <rect x="578" y="688" width="102" height="28" rx="9" fill="#FFF0DC"/><text x="629" y="708" text-anchor="middle" class="tiny" style="fill:#A34A16">已满10周</text>
+  <path d="M76 729H680" class="line"/>
+  <circle cx="89" cy="755" r="13" fill="#DED7DD"/><text x="116" y="761" class="code">M003</text><text x="212" y="761" class="small muted">Het</text><text x="359" y="761" class="small muted">♀</text><text x="457" y="761" class="body">12周1天</text>
+  <rect x="578" y="742" width="102" height="28" rx="9" fill="#FCE7EF"/><text x="629" y="762" text-anchor="middle" class="tiny pink">妊娠已确认</text>
+  <path d="M76 802H680" class="line"/>
+  <text x="76" y="844" class="small muted">下次换笼  10月25日</text><text x="607" y="844" class="small pink">记录换笼</text>
+
+  <!-- Card B002 -->
+  <rect x="732" y="228" width="660" height="652" rx="24" fill="#FFFFFF" stroke="#EEDCE5" filter="url(#shadow)"/>
+  <text x="760" y="277" font-size="24" font-weight="600">B002</text>
+  <rect x="844" y="250" width="70" height="36" rx="12" fill="#F7EEF3"/><text x="879" y="274" text-anchor="middle" class="body">4/5</text>
+  <rect x="1237" y="252" width="104" height="32" rx="11" fill="#FFF0DC"/><text x="1289" y="274" text-anchor="middle" class="small" style="fill:#A34A16">1 条提醒</text>
+  <text x="1357" y="278" text-anchor="middle" font-size="24" class="muted">⋯</text>
+  <rect x="756" y="308" width="612" height="256" rx="20" fill="url(#scene)"/>
+  <path d="M756 505Q906 475 1062 493Q1221 478 1368 505V544Q1368 564 1348 564H776Q756 564 756 544Z" fill="#EFD6C3"/>
+  <path d="m793 536 16-4m41 14 18-3m92-20 13 5m104 18 17-4m63-20 15 4m85 16 18-3m31 7 10-3" stroke="#D9B99F" stroke-width="3" stroke-linecap="round"/>
+  <path d="M819 493Q835 385 973 382Q1100 381 1139 491Z" fill="#F0D4DF" stroke="#D8B2C3" stroke-width="2"/>
+  <path d="M860 486Q868 416 973 415Q1072 415 1091 488Z" fill="#DDBACB"/>
+  <path d="M813 493Q976 456 1148 491L1124 533Q965 568 838 528Z" fill="url(#nest)"/>
+  <ellipse cx="977" cy="494" rx="142" ry="31" fill="#E9C8B2"/>
+  <path d="m836 505 25 9m36 9 23 6m103 6 24-7m40-5 26-9" stroke="#CBA68B" stroke-width="3" stroke-linecap="round"/>
+  <use href="#sleeping-mouse" transform="translate(938 464) scale(1.22)"/>
+  <use href="#pup" transform="translate(1006 501) rotate(-10)"/>
+  <use href="#pup" transform="translate(1060 487) rotate(15)"/>
+  <use href="#pup" transform="translate(1056 518) rotate(-5)"/>
+  <path d="M1221 511h79l-8 22q-31 9-63 0z" fill="#E5B2C4" stroke="#C991AA" stroke-width="2"/>
+  <ellipse cx="1260" cy="511" rx="39" ry="10" fill="#F3D7E2" stroke="#C991AA" stroke-width="2"/>
+  <ellipse cx="1249" cy="509" rx="7" ry="4" fill="#C6A075"/><ellipse cx="1270" cy="512" rx="8" ry="4" fill="#D5B58C"/>
+  <rect x="1270" y="328" width="43" height="74" rx="12" fill="#F9FEFF" stroke="#B2C5D0" stroke-width="2"/>
+  <path d="M1273 359h37v30q0 9-9 9h-19q-9 0-9-9z" fill="#CCE1EA"/>
+  <rect x="1267" y="326" width="49" height="12" rx="5" fill="#DFB4C6"/>
+  <path d="M1291 403v22l-12 13" fill="none" stroke="#A2ADB8" stroke-width="5" stroke-linecap="round"/>
+  <text x="756" y="610" class="tiny muted">编号 / 基因型</text><text x="1141" y="610" class="tiny muted">周龄</text>
+  <circle cx="773" cy="647" r="13" fill="#DED7DD"/><text x="800" y="653" class="code">M010</text><text x="896" y="653" class="small muted">WT</text><text x="1043" y="653" class="small muted">♀</text><text x="1141" y="653" class="body">20周0天</text>
+  <rect x="1253" y="634" width="105" height="28" rx="9" fill="#FCE7EF"/><text x="1305" y="654" text-anchor="middle" class="tiny pink">哺乳中</text>
+  <path d="M760 675H1364" class="line"/>
+  <text x="760" y="709" class="code">L002</text><text x="841" y="709" class="small muted">3只幼鼠 · 3日龄</text>
+  <path d="M1232 697v13m-6-7h12" stroke="#B83D70" stroke-width="1.8" stroke-linecap="round"/>
+  <text x="1248" y="709" class="small pink">查看族谱</text>
+  <rect x="760" y="729" width="133" height="38" rx="12" fill="#FFF3F7"/><text x="827" y="754" text-anchor="middle" class="small">M011</text>
+  <rect x="905" y="729" width="133" height="38" rx="12" fill="#FFF3F7"/><text x="971" y="754" text-anchor="middle" class="small">M012</text>
+  <rect x="1050" y="729" width="133" height="38" rx="12" fill="#FFF3F7"/><text x="1116" y="754" text-anchor="middle" class="small">M013</text>
+  <path d="M760 802H1364" class="line"/>
+  <text x="760" y="844" class="small muted">下次换笼  10月27日</text><text x="1291" y="844" class="small pink">记录换笼</text>
+
+  <rect x="1217" y="934" width="175" height="60" rx="20" fill="#B83D70" filter="url(#shadow)"/>
+  <path d="M1249 955v18m-9-9h18" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="1280" y="972" font-size="20" style="fill:#FFFFFF;font-weight:600">新增</text>
+  <text x="48" y="988" class="tiny muted">MVP · 静态概念图</text>
+</svg>
