@@ -1,0 +1,60 @@
+{
+  "fixture": {
+    "cages": 200,
+    "mice": 1000
+  },
+  "viewport": {
+    "width": 1512,
+    "height": 1400,
+    "scale": 1
+  },
+  "firstInteractiveMs": 419,
+  "motion": "full",
+  "frames": {
+    "rafFps": 101.5,
+    "frameP95Ms": 16.8,
+    "worstFrameMs": 82.8,
+    "samples": 813,
+    "maxScenes": 6,
+    "maxCharacters": 28,
+    "hiddenDuringSample": false
+  },
+  "feedback": [
+    {
+      "action": "search",
+      "ms": 33.4,
+      "cards": 1,
+      "rows": 0
+    },
+    {
+      "action": "search",
+      "ms": 43.2,
+      "cards": 12,
+      "rows": 0
+    },
+    {
+      "action": "view",
+      "ms": 27.5,
+      "cards": 0,
+      "rows": 30
+    },
+    {
+      "action": "search",
+      "ms": 15.6,
+      "cards": 0,
+      "rows": 1
+    },
+    {
+      "action": "search",
+      "ms": 27.5,
+      "cards": 0,
+      "rows": 30
+    },
+    {
+      "action": "view",
+      "ms": 97.8,
+      "cards": 12,
+      "rows": 0
+    }
+  ]
+}
