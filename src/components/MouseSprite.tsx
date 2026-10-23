@@ -23,12 +23,20 @@ export function MouseSprite({
   const key = `${coat}-${pose || portraitPose(mouse, a)}`;
   const source = `/assets/mice/${key}.webp?v=${SPRITE_VERSION}`;
   const parts = SPRITE_PARTS[key];
+  const ear = parts?.ears[0],
+    eye = parts?.eyes[0];
+  const headX = ear && eye ? (ear.x + eye.x) / 2 + 6 : (ear?.x || 50) + 10;
+  const headY = ear && eye ? Math.min(ear.y, eye.y) - 6 : (ear?.y || 30) + 5;
   const shape = {
     ...style,
     "--body-scale": a?.body === "slender" ? ".94" : "1.04",
     "--ear-scale": "1",
     "--face-scale": a?.face === "pointed" ? "1.02" : "1",
     "--tail-scale": a?.tail === "long" ? "1.03" : "1",
+    "--cap-x": `${headX}%`,
+    "--cap-y": `${headY}%`,
+    "--blaze-x": `${headX + 8}%`,
+    "--blaze-y": `${headY + 1}%`,
   } as CSSProperties;
   return (
     <span

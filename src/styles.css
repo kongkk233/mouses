@@ -1024,14 +1024,14 @@ svg {
 }
 .pattern-blaze .fur-pattern {
   background: radial-gradient(
-    ellipse 8% 15% at 63% 33%,
+    ellipse 8% 15% at var(--blaze-x, 63%) var(--blaze-y, 33%),
     #fff9e9 25%,
     transparent 85%
   );
 }
 .pattern-cap .fur-pattern {
   background: radial-gradient(
-    ellipse 19% 13% at 54% 25%,
+    ellipse 19% 13% at var(--cap-x, 54%) var(--cap-y, 25%),
     #82665a 10%,
     transparent 95%
   );
