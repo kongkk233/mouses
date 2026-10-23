@@ -34,8 +34,23 @@ export function verifySession(
       .digest("base64url"),
   );
 }
-function loginPage(error = "") {
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fbf7f4"><title>回到小窝 · 鼠鼠小窝</title><link rel="icon" href="/favicon.svg"><link rel="manifest" href="/manifest.webmanifest"><style>*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at 70% 20%,#f1e1d9,transparent 60%),#fbf7f4;color:#6b4a54;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;padding:24px}main{width:min(360px,100%);text-align:center}img{width:180px;height:180px;object-fit:contain}h1{font-size:28px;font-family:'Songti SC',serif;font-weight:600;letter-spacing:2px;margin:12px 0 28px}form{text-align:left;background:#fffdf9;border:1px solid #eadbd3;border-radius:19px;padding:25px;box-shadow:0 8px 40px #8c56500a}label{font-size:13px;color:#806770;display:block;margin-bottom:10px}input{width:100%;height:46px;background:#fbf7f3;border:1px solid #e4d4ce;border-radius:9px;padding:12px;font-size:16px;color:#65464f;outline:none}input:focus{border-color:#b06c80;box-shadow:0 0 0 3px #b06c8015}button{border:0;border-radius:9px;width:100%;height:46px;background:#ad5d70;color:white;margin-top:19px;font-size:14px;cursor:pointer}button:hover{background:#98495f}p{font-size:12px;color:#9e4f49;line-height:1.7;margin:12px 0 0}footer{margin-top:24px;font-size:10px;color:#8a7074;letter-spacing:2px}</style></head><body><main><img src="/assets/mice/cream-idle.webp?v=${SPRITE_VERSION}" alt="等待你的小鼠"><h1>欢迎回到小窝</h1><form method="post" action="/session"><input type="hidden" name="username" autocomplete="username" value="admin"><label for="password">访问密码</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required autofocus>${error ? `<p role="alert">${error}</p>` : ""}<button type="submit">进入小窝</button></form><footer>鼠鼠小窝 · MOUSE NOOK</footer></main></body></html>`;
+function safeReturnPath(value: unknown): string {
+  return typeof value === "string" &&
+    value.length <= 2048 &&
+    (value === "/" || value.startsWith("/?")) &&
+    !/[\\\u0000-\u001f]/.test(value)
+    ? value
+    : "/";
+}
+function loginPage(error = "", returnTo = "/") {
+  const target = safeReturnPath(returnTo).replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ]!,
+  );
+  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fbf7f4"><title>回到小窝 · 鼠鼠小窝</title><link rel="icon" href="/favicon.svg"><link rel="manifest" href="/manifest.webmanifest"><style>*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;background:radial-gradient(ellipse at 70% 20%,#f1e1d9,transparent 60%),#fbf7f4;color:#6b4a54;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;padding:24px}main{width:min(360px,100%);text-align:center}img{width:180px;height:180px;object-fit:contain}h1{font-size:28px;font-family:'Songti SC',serif;font-weight:600;letter-spacing:2px;margin:12px 0 28px}form{text-align:left;background:#fffdf9;border:1px solid #eadbd3;border-radius:19px;padding:25px;box-shadow:0 8px 40px #8c56500a}label{font-size:13px;color:#806770;display:block;margin-bottom:10px}input{width:100%;height:46px;background:#fbf7f3;border:1px solid #e4d4ce;border-radius:9px;padding:12px;font-size:16px;color:#65464f;outline:none}input:focus{border-color:#b06c80;box-shadow:0 0 0 3px #b06c8015}button{border:0;border-radius:9px;width:100%;height:46px;background:#ad5d70;color:white;margin-top:19px;font-size:14px;cursor:pointer}button:hover{background:#98495f}p{font-size:12px;color:#9e4f49;line-height:1.7;margin:12px 0 0}footer{margin-top:24px;font-size:10px;color:#8a7074;letter-spacing:2px}</style></head><body><main><img src="/assets/mice/cream-idle.webp?v=${SPRITE_VERSION}" alt="等待你的小鼠"><h1>欢迎回到小窝</h1><form method="post" action="/session"><input type="hidden" name="returnTo" value="${target}"><input type="hidden" name="username" autocomplete="username" value="admin"><label for="password">访问密码</label><input id="password" name="password" type="password" autocomplete="current-password" maxlength="256" required autofocus>${error ? `<p role="alert">${error}</p>` : ""}<button type="submit">进入小窝</button></form><footer>鼠鼠小窝 · MOUSE NOOK</footer></main></body></html>`;
 }
 export function accessGate() {
   const router = express.Router(),
@@ -52,15 +67,16 @@ export function accessGate() {
     !!req.headers.origin && allowed.has(req.headers.origin);
   router.post(
     "/session",
-    express.urlencoded({ extended: false, limit: "2kb" }),
+    express.urlencoded({ extended: false, limit: "8kb" }),
     (req, res) => {
       res.setHeader("Cache-Control", "no-store");
+      const returnTo = safeReturnPath(req.body?.returnTo);
       if (!password) {
-        res.redirect(303, "/");
+        res.redirect(303, returnTo);
         return;
       }
       if (!sameOrigin(req)) {
-        res.status(403).send(loginPage("请从小窝页面重新登录"));
+        res.status(403).send(loginPage("请从小窝页面重新登录", returnTo));
         return;
       }
       const ip = req.ip || "local",
@@ -69,7 +85,9 @@ export function accessGate() {
       if (!limit || limit.until <= now)
         limit = { count: 0, until: now + 60000 };
       if (limit.count >= 8) {
-        res.status(429).send(loginPage("尝试次数较多，请一分钟后重试"));
+        res
+          .status(429)
+          .send(loginPage("尝试次数较多，请一分钟后重试", returnTo));
         return;
       }
       const given =
@@ -78,7 +96,7 @@ export function accessGate() {
         limit.count++;
         if (attempts.size > 1000) attempts.clear();
         attempts.set(ip, limit);
-        res.status(401).send(loginPage("密码不正确，请重试"));
+        res.status(401).send(loginPage("密码不正确，请重试", returnTo));
         return;
       }
       attempts.delete(ip);
@@ -86,7 +104,7 @@ export function accessGate() {
         "Set-Cookie",
         `${COOKIE}=${issueSession(password)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${WEEK / 1000}${req.secure ? "; Secure" : ""}`,
       );
-      res.redirect(303, "/");
+      res.redirect(303, returnTo);
     },
   );
   router.post("/session/logout", (req, res) => {
@@ -131,7 +149,7 @@ export function accessGate() {
         error: "访问已过期，请重新登录后重试",
         field: "authentication",
       });
-    else res.status(200).type("html").send(loginPage());
+    else res.status(200).type("html").send(loginPage("", req.originalUrl));
   });
   return router;
 }

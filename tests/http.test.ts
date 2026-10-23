@@ -72,6 +72,26 @@ test("real HTTP API protects origins, saves atomically, replays and survives res
     assert.equal(login.status, 200);
     assert.match(await login.text(), /欢迎回到小窝/);
     assert.equal(login.headers.get("www-authenticate"), null);
+    const linkedLogin = await fetch(base + "/?panel=reminders&context=test");
+    assert.ok(
+      (await linkedLogin.text()).includes(
+        'name="returnTo" value="/?panel=reminders&amp;context=test"',
+      ),
+    );
+    const badPassword = await fetch(base + "/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        origin: base,
+      },
+      body: new URLSearchParams({
+        password: "wrong",
+        returnTo: '/?x="/><script>alert(1)</script>',
+      }),
+      redirect: "manual",
+    });
+    assert.equal(badPassword.status, 401);
+    assert.doesNotMatch(await badPassword.text(), /<script>/);
     const rejected = await fetch(base + "/session", {
       method: "POST",
       headers: {
@@ -88,10 +108,21 @@ test("real HTTP API protects origins, saves atomically, replays and survives res
         "Content-Type": "application/x-www-form-urlencoded",
         origin: base,
       },
-      body: new URLSearchParams({ password }),
+      body: new URLSearchParams({ password, returnTo: "/?panel=reminders" }),
       redirect: "manual",
     });
     assert.equal(session.status, 303);
+    assert.equal(session.headers.get("location"), "/?panel=reminders");
+    const externalReturn = await fetch(base + "/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        origin: base,
+      },
+      body: new URLSearchParams({ password, returnTo: "//untrusted.invalid/" }),
+      redirect: "manual",
+    });
+    assert.equal(externalReturn.headers.get("location"), "/");
     const cookie = session.headers.get("set-cookie")!;
     assert.match(cookie, /HttpOnly/);
     assert.match(cookie, /SameSite=Lax/);
