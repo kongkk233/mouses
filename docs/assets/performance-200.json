@@ -8,13 +8,13 @@
     "height": 1400,
     "scale": 1
   },
-  "firstInteractiveMs": 419,
+  "firstInteractiveMs": 260,
   "motion": "full",
   "frames": {
-    "rafFps": 101.5,
-    "frameP95Ms": 16.8,
-    "worstFrameMs": 82.8,
-    "samples": 813,
+    "rafFps": 76.6,
+    "frameP95Ms": 33.3,
+    "worstFrameMs": 150,
+    "samples": 613,
     "maxScenes": 6,
     "maxCharacters": 28,
     "hiddenDuringSample": false
@@ -22,39 +22,40 @@
   "feedback": [
     {
       "action": "search",
-      "ms": 33.4,
+      "ms": 33.8,
       "cards": 1,
       "rows": 0
     },
     {
       "action": "search",
-      "ms": 43.2,
+      "ms": 108.3,
       "cards": 12,
       "rows": 0
     },
     {
       "action": "view",
-      "ms": 27.5,
+      "ms": 78.4,
       "cards": 0,
       "rows": 30
     },
     {
       "action": "search",
-      "ms": 15.6,
+      "ms": 17,
       "cards": 0,
       "rows": 1
     },
     {
       "action": "search",
-      "ms": 27.5,
+      "ms": 51,
       "cards": 0,
       "rows": 30
     },
     {
       "action": "view",
-      "ms": 97.8,
+      "ms": 126.2,
       "cards": 12,
       "rows": 0
     }
-  ]
+  ],
+  "frontendCommit": "fe61d8d"
 }
