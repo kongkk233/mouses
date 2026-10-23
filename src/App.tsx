@@ -954,7 +954,6 @@ export default function App() {
             )}
             <footer className="page-footer">
               <span className="footer-flower">✿</span> 把小小的生命，放在心上。
-              <span>数据保存在本机服务数据库</span>
             </footer>
           </>
         )}

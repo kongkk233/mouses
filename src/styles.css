@@ -1352,12 +1352,6 @@ svg {
   margin-right: 5px;
   font-size: 13px;
 }
-.page-footer > span:last-child {
-  margin-left: 23px;
-  font-size: 9px;
-  color: #726762;
-  letter-spacing: 0.2px;
-}
 .add-dock {
   position: fixed;
   right: max(36px, calc((100vw - 1336px) / 2));

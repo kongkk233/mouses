@@ -422,7 +422,6 @@ export function MouseDetail({ id }: { id: string }) {
             <MouseSprite mouse={m} pose="groom" />
             <div>
               <strong>{coatLabels[m.appearance.coat]}</strong>
-              <p>稳定身份 #{m.avatarSeed.toString(36).toUpperCase()}</p>
               <span className="muted">
                 {m.appearanceLocked ? "外观已锁定" : "默认生成外观"} · 趣味呈现
               </span>
