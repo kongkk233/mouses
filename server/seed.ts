@@ -23,7 +23,7 @@ try {
       a2 = cage("A002", "橡果公寓"),
       b1 = cage("B001", "奶芙的育儿室", "nursery", 8),
       b2 = cage("B002", "杏仁小筑", "breeding"),
-      c1 = cage("C001", "新芽宿舍"),
+      c1 = cage("C001", "新芽宿舍", "nursery", 8),
       c2 = cage("C002", "等一位新住客");
     let n = 0;
     const mouse = (
@@ -57,6 +57,11 @@ try {
     mouse("M003", "芝麻", a1, 99, "female", "KO", 2);
     const dad = mouse("M004", "团子", a2, 245, "male", "WT", 3);
     mouse("M005", "栗子", a2, 158, "male", "Het", 1);
+    run("cage.update", {
+      id: a2,
+      capacity: 1,
+      capacityReason: "验收示例：如实展示已有 2 只、配置容量为 1 的超限状态",
+    });
     const mum = mouse("M006", "奶芙", b1, 145, "female", "Het", 1);
     run("mouse.update", {
       id: mum,
@@ -65,7 +70,7 @@ try {
       reason: "导入已确认家系",
     });
     const almond = mouse("M007", "杏仁", b2, 122, "female", "WT", 0);
-    mouse("M008", "麦麦", b2, 72, "female", "Het", 1);
+    const foster = mouse("M008", "麦麦", b2, 72, "female", "Het", 1);
     for (let i = 0; i < 4; i++)
       mouse(
         `M0${9 + i < 10 ? "0" : ""}${9 + i}`,
@@ -93,6 +98,63 @@ try {
     });
     const babies = s.mice.filter((m) => m.birthLitterId);
     babies.forEach((m, i) => (m.nickname = ["小雪球", "小云朵", "小泡芙"][i]));
+    run("mouse.transfer", {
+      mouseIds: [foster],
+      cageId: c1,
+      date: past(35),
+      notes: "示例寄养母实际转入育幼笼",
+    });
+    const olderLitter = run("litter.create", {
+      code: "L002",
+      bornOn: past(35),
+      bornAlive: 3,
+      birthTotal: 5,
+      differenceNote: "历史失仔 2 只，仅为当前活体 3 只建立档案",
+      cageId: c1,
+      motherId: grandma,
+      candidateFatherIds: [dad, s.mice.find((m) => m.code === "M005")!.id],
+      fosterMotherId: foster,
+      nursing: true,
+      weanDueOn: past(7),
+      appearanceChoice: 2,
+      appearanceConfirmed: true,
+      avatarSeed: 7193,
+    }).id;
+    const older = s.mice.filter((m) => m.birthLitterId === olderLitter);
+    older.forEach((m, i) => (m.nickname = ["小铃兰", "小燕麦", "小松子"][i]));
+    run("litter.wean", { mouseIds: [older[0].id], date: past(7), cageId: a1 });
+    run("litter.wean", { mouseIds: [older[1].id], date: past(6), cageId: a1 });
+    for (const [id, choice] of [
+      [m1, 0],
+      [m2, 1],
+    ] as const) {
+      run("mouse.update", {
+        id,
+        motherId: grandma,
+        fatherId: dad,
+        reason: "示例：登记可追溯的共同祖先",
+      });
+      const m = s.mice.find((m) => m.id === id)!;
+      run("mouse.appearance", {
+        id,
+        appearance: appearanceFor(
+          m.avatarSeed,
+          s.mice.find((m) => m.id === grandma)!.appearance,
+          s.mice.find((m) => m.id === dad)!.appearance,
+          choice,
+        ),
+        locked: true,
+      });
+    }
+    run("care.record", {
+      cageIds: [a1],
+      mouseId: m2,
+      kind: "phenotype",
+      date: past(2),
+      observer: "示例记录人",
+      experimentalFact: true,
+      notes: "示例观察：深灰背毛与额间白斑；装饰头像采用可可色，二者独立保存。",
+    });
     run("mouse.archive", {
       mouseIds: [grandma],
       date: past(20),
@@ -127,6 +189,7 @@ try {
       candidateFatherIds: [m2],
       date: past(5),
       reviewOn: future(1),
+      kinshipAcknowledged: true,
     }).id;
     run("breeding.update", {
       id: waiting,
