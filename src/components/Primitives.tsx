@@ -7,9 +7,10 @@ import { sexLabel } from '../../shared/types';
 import { MouseSprite } from './MouseSprite';
 import { mouseTags } from '../selectors';
 export const Badge=({children,tone='muted'}:{children:ReactNode;tone?:string})=><span className={`badge ${tone}`}>{children}</span>;
+let openDrawers=0;let initialOverflow='';
 export function Drawer({title,children,wide=false}:{title:string;children:ReactNode;wide?:boolean}){
  const {back,close,stack}=useApp(),ref=useRef<HTMLDialogElement>(null);
- useEffect(()=>{const dialog=ref.current!;dialog.showModal();const old=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{dialog.close();document.body.style.overflow=old;};},[]);
+ useEffect(()=>{const dialog=ref.current!;dialog.showModal();if(openDrawers===0)initialOverflow=document.body.style.overflow;openDrawers++;document.body.style.overflow='hidden';return()=>{dialog.close();openDrawers--;if(openDrawers===0)document.body.style.overflow=initialOverflow;};},[]);
  return <dialog ref={ref} className={`drawer ${wide?'wide':''}`} onCancel={e=>{e.preventDefault();back();}} onClick={e=>{if(e.target===ref.current)back();}}>
   <div className="drawer-shell"><header className="drawer-header"><div className="row gap-12">{stack.length>1&&<button className="icon-button" aria-label="返回上一页" onClick={back}><ArrowLeft size={20}/></button>}<h2>{title}</h2></div><button className="icon-button" aria-label="关闭面板" onClick={close}><X size={21}/></button></header><div className="drawer-content">{children}</div></div>
  </dialog>;

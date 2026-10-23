@@ -3,6 +3,7 @@ import { mkdirSync, chmodSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import type { AppState, Command } from '../shared/types.js';
+import { todayIn } from '../shared/dates.js';
 import { applyCommand, DomainError, emptyState, reconcile } from './domain.js';
 
 export const collections = ['mice','cages','breedings','litters','occurrences','events','reminders','careTasks'] as const;
@@ -35,6 +36,7 @@ export class Store {
     const meta=this.db.prepare('SELECT * FROM meta WHERE id=1').get() as any;
     const s={...emptyState(), revision:meta.revision, settings:JSON.parse(meta.settings), demo:!!meta.demo};
     for(const table of collections) (s[table] as any[])=this.db.prepare(`SELECT payload FROM ${table}`).all().map((r:any)=>JSON.parse(r.payload));
+    s.today=todayIn(s.settings.timezone);
     // Stable order makes reconciliation and payload comparison deterministic.
     return s;
   }

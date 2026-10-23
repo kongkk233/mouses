@@ -7,7 +7,10 @@ import { SettingsPanel, AppearanceForm } from './Settings';
 import { ArchiveForm, BreedingStop, CarePanel, CleaningCorrection, OccurrenceDetail, Reminders, SnoozeForm } from './TaskPanels';
 const titles:Record<string,string>={cage:'小窝档案',mouse:'鼠鼠档案',litter:'窝次与成长',mouseForm:'小鼠档案',cageForm:'笼位资料',clean:'记录换笼',plan:'换笼计划',transfer:'转笼',wean:'实际断奶',careForm:'照护记录',breedingForm:'登记配种',breedingUpdate:'繁育节点',litterForm:'登记一窝',litterEdit:'更正窝次',settings:'小窝设置',appearance:'形象工作室',archive:'去向与归档',breedingStop:'繁殖资格',care:'今日照护',cleaningCorrect:'更正换笼记录',occurrence:'本次换笼',reminders:'提醒',snooze:'稍后提醒'};
 export function Panels(){
- const {stack,state}=useApp();const panel=stack.at(-1);if(!panel)return null;const {kind,id,data}=panel;
+ const {stack}=useApp();return <>{stack.map((panel,index)=><PanelLayer key={`${panel.kind}:${panel.id||''}:${index}`} panel={panel}/>)}</>;
+}
+function PanelLayer({panel}:{panel:ReturnType<typeof useApp>['stack'][number]}){
+ const {stack,state}=useApp();const {kind,id,data}=panel;
  if(['mouse','mouseForm','appearance','breedingStop'].includes(kind)&&id&&!state.mice.some(m=>m.id===id))return null;
  let content;
  switch(kind){

@@ -1,6 +1,6 @@
 import express from 'express';
 import { resolve } from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, writeFileSync, unlinkSync } from 'node:fs';
 import { timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { Store } from './store.js';
@@ -8,6 +8,8 @@ import { DomainError } from './domain.js';
 import { PushService } from './notifications.js';
 
 const app=express(), store=new Store(), push=new PushService(store);
+const runtimeFile=resolve(process.env.DATA_DIR||'data',`runtime-${process.pid}.lock`);
+writeFileSync(runtimeFile,String(process.pid),{mode:0o600});
 if(process.env.TRUST_PROXY==='1') app.set('trust proxy',1);
 app.disable('x-powered-by');
 app.use((req,res,next)=>{
@@ -58,5 +60,6 @@ app.use((error:any,_req:express.Request,res:express.Response,_next:express.NextF
 const host=process.env.HOST||'127.0.0.1',port=Number(process.env.PORT)||3001;
 const server=app.listen(port,host,()=>{console.log(`Mouse Nook API · http://${host}:${port}`);void push.tick().catch(e=>console.error('Scheduler:',e.message));});
 const timer=setInterval(()=>void push.tick().catch(e=>console.error('Scheduler:',e.message)),30000);timer.unref();
-function stop(){clearInterval(timer);server.close(()=>{store.close();process.exit(0);});}
-process.on('SIGTERM',stop);process.on('SIGINT',stop);
+let stopping=false;
+async function stop(){if(stopping)return;stopping=true;clearInterval(timer);await push.drain();server.close(()=>{try{unlinkSync(runtimeFile);}catch{}store.close();process.exit(0);});}
+process.on('SIGTERM',()=>void stop());process.on('SIGINT',()=>void stop());

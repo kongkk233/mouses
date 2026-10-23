@@ -9,3 +9,7 @@ data/
 artifacts/
 *.log
 
+
+# The host global ignore pattern Icon? also matches this required PWA directory.
+!public/icons/
+!public/icons/*.png
