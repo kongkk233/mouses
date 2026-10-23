@@ -2,7 +2,7 @@
 
 ## 产品设计基线
 
-- 当前产品需求为 [docs/PRD.md](docs/PRD.md) v1.1，首页静态概念图见 [docs/assets/cage-view-concept.svg](docs/assets/cage-view-concept.svg)，换笼日历见 [docs/assets/cage-calendar-concept.svg](docs/assets/cage-calendar-concept.svg)。现阶段交付为设计文档与静态概念图，尚未实现应用、连接通知渠道或验证运行性能。
+- 当前产品基线为 [v2.0 PRD](docs/PRD-v2.0-鼠鼠小窝-优化版.md)。已实现 React / TypeScript、Node 与 SQLite 应用；运行见 [README](README.md)。原静态概念图保留作设计参考，实际界面使用原创栅格精灵与小窝背景。部署与真机验收状态见 [验收记录](docs/ACCEPTANCE.md)。
 - 文档内嵌 PNG 预览，SVG 是可编辑源。修改 SVG 后可用 `rsvg-convert docs/assets/cage-view-concept.svg -o docs/assets/cage-view-concept.png` 同步；本机 Quick Look 对横向 SVG 的缩略图会裁掉右侧，不适合用于完整布局验收。
 - 首页维持鼠笼 / 小鼠两种视图；增加顶部常驻换笼日历入口。繁殖与局部族谱放在个体详情中。粉色动态鼠笼是核心体验，但关闭动画后必须仍可完成管理。
 
@@ -26,3 +26,17 @@
 - 通知调度在应用服务端持续执行，不依赖模型、聊天窗口或桌面应用常开；不能只部署静态网页。优先滴答同步后由其 iPhone 客户端提醒，无法满足时交付 PWA Web Push，至少一种手机渠道通过真机验收。
 - 外部任务勾选不自动证明实际换笼完成；任务引导回系统登记。一次实例对应一个普通外部任务，不能再开启外部周期规则。超时先对账，业务事件与外部同步操作使用事务发件箱。
 - 外部任务同步成功、通知服务接受、手机实际显示、用户完成工作必须区分；无设备回执不声称已送达。实际账号未接入，未创建真实外部任务。
+
+## 实现交接（2026-10-24）
+
+- 所有关系使用 UUID；`server/domain.ts` 是业务规则唯一入口，`Store.execute` 在 `BEGIN IMMEDIATE` 中执行、校验全局 revision 并保存 operation receipt。不要在前端直接维护第二份换笼日期或个体计数。
+- `data/` 与 `.env` 不进 Git。示例由显式 `npm run seed` 导入；生产新库保持空库。`DATA_DIR` 可隔离测试、示例和真实记录。
+- 鼠鼠原图在 `design/source`，运行素材在 `public/assets/mice`；图片用实际 alpha 合成。部分图片查看器会显示透明像素的 RGB 彩点，先用实色背景合成检查，不能误删透明边缘。
+- 本机全局 Git 忽略 `Icon?` 会把 `public/icons` 也忽略，项目 `.gitignore` 已明确取消此目录的忽略。PWA 图标必须随代码提交。
+- Vite 会原样复制 `public/sw.js` 而不解析，构建成功不保证 service worker 语法正确。构建脚本已加 `node --check public/sw.js`，并需在浏览器确认注册。
+- 透明精灵分割用 `scripts/prepare-assets.mjs`；不在浏览器载入原始 PNG 图集，优化后每个 WebP 独立按需载入。
+- 通知队列按真实待办聚合。混合批次中任何源失效时需释放未发送节点，再为仍有效事项入队；否则会丢失同批剩余通知。普通周龄不每日重响，换笼逾期才按天汇总；稍后提醒独立参与去重。
+- 静默时段跨午夜时必须平移通知日期与时刻，而不是只比较时刻，否则 23:00 提醒会永远落进 22:00–08:00 静默区。对应测试已覆盖。
+- 抽屉使用原生 dialog，多层抽屉保留上层表单与标签页；body 滚动锁按打开数量管理，不能在多层卸载后残留 hidden。
+- 修改周期的“下次完成后生效”与暂停、通知偏好分别处理，不能用提前 return 吞掉本次暂停操作。
+- 服务与备份脚本编译到 `dist-server`；生产移除开发依赖后不要调用 tsx。systemd 运行编译后的 Node 文件，数据与发布版本分离。

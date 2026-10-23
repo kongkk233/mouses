@@ -1,0 +1,25 @@
+# 鼠鼠与小窝原创素材
+
+使用内置 `image_gen.imagegen`，未使用 CLI 回退。原图完整保存在本项目，运行时使用分割与压缩的 WebP。透明源图以实际 alpha 为准；部分查看器会显示全透明像素的彩色 RGB，它们合成后不可见。
+
+| 源图 | 用途 |
+| --- | --- |
+| `source/mouse-atlas-source.png` | 4 体色 × 坐姿、熟睡、吃燕麦、探索 |
+| `source/mouse-actions-source.png` | 4 体色 × 饮水、理毛、伸展、幼鼠休息 |
+| `source/habitat-source.png` | 无动物小窝道具背景 |
+
+产物为 `public/assets/mice/*.webp`、`public/assets/habitat.webp`、`public/icons/*.png`；运行 `node scripts/prepare-assets.mjs` 重建。没有通过编程绘图替代鼠鼠插画；CSS 只负责轻量变换、花纹叠层及动效。
+
+## 最终提示词
+
+### 基础精灵（透明）
+
+Use case: game-asset. Asset type: production sprite atlas for a beautiful mouse colony management web application called Mouse Nook. Create ONE square transparent PNG sprite sheet, precisely 4 columns by 4 rows, 16 isolated characters in equally sized cells with generous clear transparent padding, no contact between cells. Every character completely within its cell, nothing outside; consistent scale and soft grounding shadow. A premium tactile 3D storybook miniature aesthetic, exquisite soft velvety short fur, tiny translucent blush-pink rounded ears, shiny black seed eyes with catchlights, small pointed snout and blush nose, fine whiskers, little delicate pink paws, elegant long pink curling tail (these are MICE not hamsters). Warm soft studio light, a collectible art toy quality mixed with delicate picture-book charm, cute but not childish clip-art, no outlines. Camera always three quarter frontal slightly above. Row 1: ivory white mouse in four poses: awake curious sitting; curled sleeping eyes closed; holding tiny oat in paws eating; on all fours exploring facing right. Row 2: warm biscuit cream mouse same four poses. Row 3: silver gray mouse same four poses. Row 4: cocoa brown mouse with cream muzzle same four poses. All poses same recognizable individual within each row. Especially detailed fluffy cheeks, round haunches, charming tiny paws, large expressive ears. Sleeping mouse tail curls around it. Each tail and ears visible completely. Absolutely no text, gridlines, labels, logos, props, scenery, colored background, bowls or water bottles. Truly transparent alpha background. Perfectly organized 4x4 sprite atlas.
+
+### 补充动作（透明；参考基础精灵）
+
+Create a companion production sprite atlas matching the referenced mouse artwork exactly in fur quality, character proportions, camera angle and delightful art-toy storybook style. Square transparent PNG, precise equally spaced 4 columns x 4 rows, 16 isolated mice, no touching or overlapping cells, all tails and ears fully inside their cell. Same color arrangement: first row ivory white mice; second row biscuit cream; third row silver gray; fourth row cocoa brown with cream muzzle. This sheet has DIFFERENT actions: column 1 each mouse upright stretching snout up diagonally right, drinking pose, tiny forepaws at chest, no water bottle; column 2 each mouse grooming, front paws delicately covering face, one eye peeking; column 3 each mouse long luxurious stretch, forepaws extended on ground and eyes closed; column 4 a tiny baby mouse curled up asleep, short fine fur, very small ears and a little pink tail, pink little paws. Keep each mouse centered in cell, full-body. First three columns adults at same scale as referenced adults; baby in fourth column half adult size and centered in cell. Exquisitely detailed fine velvety fur, pink ears, warm diffuse light. Transparent alpha backdrop with clean edges, no colored speckles, no text, no scenery, no props, no labels.
+
+### 小窝背景（不透明）
+
+Use case: game-asset. Production environment backdrop for a premium illustrated mouse-colony web app. Landscape 3:2 composition. A beautiful EMPTY little mouse habitat as a tactile 3D storybook diorama, front cutaway view slightly above, warm afternoon diffuse light, soft handmade ceramic and natural wood textures, restrained dusty pink, cream, oat and sage palette. Lower half is warm pale wood-shaving floor with fine curly paper bedding details and large OPEN space at center for separately overlaid mouse sprites. At far left edge a squat pale terracotta pink ceramic arch hideout with a wide dark doorway and a cream linen sleeping pad in front. At far right a tiny off-white ceramic bowl with a few oats, and a transparent small glass water bottle attached to right wall with a steel spout pointing diagonally left downward into the open middle. Keep floor open across center, no center props. Back wall pale blush plaster with a faint warm sunbeam and tiny star-shaped ventilation holes, rounded corners. Tiny scattered oats and very few charming paper curls, gentle shadows, beautifully crafted miniature model, exquisitely detailed material textures. Art direction: cozy high-end Japanese miniature photography meets soft picture book. Habitat fills full frame edge to edge; no outside background, no border, no text, no labels, NO ANIMALS anywhere, NO MICE, NO EYES, no human objects, no people, no wheels, no huge cage bars. All props low-contrast subordinate to future characters. Design works as a wide 380 by 200 pixel card backdrop.
