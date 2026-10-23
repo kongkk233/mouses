@@ -63,7 +63,7 @@ export function MouseForm({ id }: { id?: string }) {
       payload={() => ({
         ...form,
         ...(id
-          ? { id }
+          ? { id, cageId: mouse?.cageId }
           : { avatarSeed: seed, appearance, appearanceLocked: true }),
       })}
       after={(result) => {

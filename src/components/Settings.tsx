@@ -155,6 +155,27 @@ function base64Bytes(value: string): Uint8Array<ArrayBuffer> {
   const raw = atob(value.replace(/-/g, "+").replace(/_/g, "/"));
   return Uint8Array.from(raw, (c) => c.charCodeAt(0));
 }
+async function pushWorkerReady(): Promise<ServiceWorkerRegistration> {
+  let timer: ReturnType<typeof setTimeout>;
+  const work = (async () => {
+    await navigator.serviceWorker.register("/sw.js");
+    return navigator.serviceWorker.ready;
+  })();
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(
+          new Error("通知组件暂时未能启动，请检查网络并重新打开小窝后重试"),
+        ),
+      10000,
+    );
+  });
+  try {
+    return await Promise.race([work, timeout]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
 export function SettingsPanel() {
   const { state, toast } = useApp(),
     [form, setForm] = useState({ ...state.settings }),
@@ -192,7 +213,7 @@ export function SettingsPanel() {
           "通知权限未开启，可在浏览器或系统设置中调整。站内照护与提醒仍可使用。",
         );
       const config = push || (await api<PushStatus>("/notifications"));
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await pushWorkerReady();
       const subscription =
         (await reg.pushManager.getSubscription()) ||
         (await reg.pushManager.subscribe({
@@ -212,7 +233,7 @@ export function SettingsPanel() {
     setPushBusy(true);
     setPushError("");
     try {
-      const reg = await navigator.serviceWorker.ready,
+      const reg = await pushWorkerReady(),
         sub = await reg.pushManager.getSubscription();
       if (!sub) throw new Error("请先开启本设备通知");
       await api("/notifications/test", { endpoint: sub.endpoint });
@@ -227,7 +248,7 @@ export function SettingsPanel() {
   const disable = async () => {
     setPushBusy(true);
     try {
-      const reg = await navigator.serviceWorker.ready,
+      const reg = await pushWorkerReady(),
         sub = await reg.pushManager.getSubscription();
       if (sub) {
         await api("/notifications/unsubscribe", { endpoint: sub.endpoint });

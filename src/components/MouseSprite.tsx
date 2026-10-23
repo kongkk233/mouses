@@ -141,9 +141,7 @@ export function CageScene({
     return () => clearInterval(id);
   }, [active, index, focused]);
   const poses = shown.map((m, i): Pose => {
-    const phase = active
-      ? Math.floor((tick + i) / Math.max(1, shown.length))
-      : 0;
+    const phase = Math.floor((tick + i) / Math.max(1, shown.length));
     if (m.weaningStatus === "unweaned") return "baby";
     if (m.weaningStatus === "unknown")
       return (["idle", "sleep", "groom"] as Pose[])[
