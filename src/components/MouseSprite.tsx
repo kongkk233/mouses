@@ -2,12 +2,11 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { Appearance, Cage, Mouse } from "../../shared/types";
 import { useApp } from "../context";
 import { cageMembers } from "../selectors";
-export type Pose =
-  "idle" | "sleep" | "eat" | "explore" | "drink" | "groom" | "stretch" | "baby";
+import { decorativePose, portraitPose, type Pose } from "../../shared/behavior";
 export function MouseSprite({
   mouse,
   appearance,
-  pose = "idle",
+  pose,
   className = "",
   style,
 }: {
@@ -20,7 +19,7 @@ export function MouseSprite({
   const a = appearance || mouse?.appearance;
   const coat = a?.coat || "cream";
   const [failed, setFailed] = useState(false);
-  const source = `/assets/mice/${coat}-${pose}.webp`;
+  const source = `/assets/mice/${coat}-${pose || portraitPose(mouse, a)}.webp`;
   const shape = {
     ...style,
     "--body-scale": a?.body === "slender" ? ".94" : "1.04",
@@ -51,16 +50,6 @@ export function MouseSprite({
     </span>
   );
 }
-const routine: Pose[] = [
-  "sleep",
-  "idle",
-  "eat",
-  "groom",
-  "explore",
-  "stretch",
-  "drink",
-  "idle",
-];
 const actionLabels: Record<Pose, string> = {
   idle: "发呆",
   sleep: "呼呼睡",
@@ -142,24 +131,16 @@ export function CageScene({
   }, [active, index, focused]);
   const poses = shown.map((m, i): Pose => {
     const phase = Math.floor((tick + i) / Math.max(1, shown.length));
-    if (m.weaningStatus === "unweaned") return "baby";
-    if (m.weaningStatus === "unknown")
-      return (["idle", "sleep", "groom"] as Pose[])[
-        (Math.floor(m.avatarSeed % 3) + phase) % 3
-      ];
     const nursing = state.litters.some(
       (l) => l.nursing && (l.fosterMotherId || l.motherId) === m.id,
     );
-    if (nursing) return phase % 4 === 3 ? "groom" : "sleep";
-    if (
-      state.breedings.some(
+    return decorativePose(m, phase, {
+      nursing,
+      pregnant: state.breedings.some(
         (b) => b.motherId === m.id && b.status === "confirmed",
-      )
-    )
-      return (["idle", "sleep", "groom", "stretch", "idle", "sleep"] as Pose[])[
-        (m.avatarSeed + phase) % 6
-      ];
-    return routine[((m.avatarSeed % 8) + i * 2 + phase) % routine.length];
+      ),
+      personalities: state.settings.personalities,
+    });
   });
   // Occupancy slots: only one drinking/eating position, at most two moving mice.
   const taken = new Set<string>();

@@ -277,10 +277,7 @@ export function MouseDetail({ id }: { id: string }) {
         <div className="profile-sparkles" aria-hidden="true">
           ✧<span>✧</span>
         </div>
-        <MouseSprite
-          mouse={m}
-          pose={m.weaningStatus === "unweaned" ? "baby" : "idle"}
-        />
+        <MouseSprite mouse={m} />
         <span className="profile-genotype">{m.genotype || "待鉴定"}</span>
         <button
           className="profile-edit"
@@ -798,11 +795,7 @@ export function LitterCard({ litter: l }: { litter: Litter }) {
     >
       <div className="litter-portraits">
         {babies.slice(0, 3).map((m) => (
-          <MouseSprite
-            mouse={m}
-            key={m.id}
-            pose={m.weaningStatus === "unweaned" ? "baby" : "idle"}
-          />
+          <MouseSprite mouse={m} key={m.id} />
         ))}
       </div>
       <div>
@@ -842,10 +835,7 @@ function FamilyNode({
         {label}
         {candidate ? " · 候选" : ""}
       </span>
-      <MouseSprite
-        mouse={mouse}
-        pose={mouse.weaningStatus === "unweaned" ? "baby" : "idle"}
-      />
+      <MouseSprite mouse={mouse} />
       <strong>
         {mouse.code}
         <small>{mouse.nickname}</small>
