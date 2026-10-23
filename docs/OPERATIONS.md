@@ -7,7 +7,7 @@
 - 代码：`/srv/mouse-nook/releases/<UTC日期>-<Git提交>`；`current` 指向当前版本，`previous` 保留上一个版本。
 - 数据：`/var/lib/mouse-nook/mouse-nook.sqlite`，SQLite WAL、0700 数据目录、0600 数据库；与版本目录分离。
 - 配置：`/etc/mouse-nook.env`，仅 root 可读；由 systemd 注入进程。首次生成随机访问密码，后续部署保留。
-- `admin` 基础认证保护页面与 API，不在公开响应、Git 或日志中输出密码。
+- 页面内密码登录建立带签名的 7 天 HttpOnly / Secure / SameSite 会话，API 兼容 `admin` 基础认证；不在公开响应、Git 或日志中输出密码。登录与退出校验来源，错误尝试限流，会话随密码更换失效。
 - 进程限额：256 MB 内存、50% 单核 CPU；异常重启，关机时等待发送中的队列操作。
 - 30 秒一次调度；队列和订阅持久化，多实例发送使用数据库租约。业务保存不受外部推送故障影响。
 

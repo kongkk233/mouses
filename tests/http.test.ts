@@ -68,6 +68,38 @@ test("real HTTP API protects origins, saves atomically, replays and survives res
     });
   try {
     assert.equal((await fetch(base + "/api/state")).status, 401);
+    const login = await fetch(base + "/");
+    assert.equal(login.status, 200);
+    assert.match(await login.text(), /欢迎回到小窝/);
+    assert.equal(login.headers.get("www-authenticate"), null);
+    const rejected = await fetch(base + "/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        origin: "https://untrusted.invalid",
+      },
+      body: new URLSearchParams({ password }),
+      redirect: "manual",
+    });
+    assert.equal(rejected.status, 403);
+    const session = await fetch(base + "/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        origin: base,
+      },
+      body: new URLSearchParams({ password }),
+      redirect: "manual",
+    });
+    assert.equal(session.status, 303);
+    const cookie = session.headers.get("set-cookie")!;
+    assert.match(cookie, /HttpOnly/);
+    assert.match(cookie, /SameSite=Lax/);
+    const signed = await fetch(base + "/api/state", {
+      headers: { cookie: cookie.split(";")[0] },
+    });
+    assert.equal(signed.status, 200);
+
     let s = await get();
     const first = {
       type: "cage.create",

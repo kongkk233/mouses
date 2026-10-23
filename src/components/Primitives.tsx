@@ -126,6 +126,16 @@ export function FormShell({
           <AlertCircle size={18} />
           <div>
             {mutation.error.message}
+            {mutation.error.status === 401 && (
+              <a
+                className="text-button"
+                href="/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                在新标签页登录，保留当前输入
+              </a>
+            )}
             {mutation.error.status === 409 && (
               <button
                 type="button"

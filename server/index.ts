@@ -1,7 +1,7 @@
 import express from "express";
 import { resolve } from "node:path";
 import { existsSync, writeFileSync, unlinkSync } from "node:fs";
-import { timingSafeEqual } from "node:crypto";
+import { accessGate } from "./access.js";
 import { z } from "zod";
 import { Store } from "./store.js";
 import { DomainError } from "./domain.js";
@@ -25,24 +25,9 @@ app.use((req, res, next) => {
     "Content-Security-Policy",
     `default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'${process.env.NODE_ENV === "production" ? "" : " ws://127.0.0.1:* ws://localhost:*"}; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'`,
   );
-  const password = process.env.APP_PASSWORD;
-  if (password) {
-    const expected = Buffer.from(`admin:${password}`),
-      given = Buffer.from(
-        (req.headers.authorization || "").replace(/^Basic /, ""),
-        "base64",
-      );
-    if (given.length !== expected.length || !timingSafeEqual(given, expected)) {
-      res.setHeader(
-        "WWW-Authenticate",
-        'Basic realm="Mouse Nook", charset="UTF-8"',
-      );
-      res.status(401).send("请登录受控小窝");
-      return;
-    }
-  }
   next();
 });
+app.use(accessGate());
 app.use("/api", (req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {

@@ -48,3 +48,5 @@
 - Cloudflare 代理下 TLS-ALPN ACME 挑战失败后，Caddy 自动改用 HTTP-01 并成功取证；不要为了短暂的 525 关闭 TLS 校验。
 - 公网探测中默认 urllib UA 返回 403，正常浏览器 UA 返回 200；应区分代理层拦截与应用的 401，不能误判为数据库或认证故障。
 - 截至本次验收尚无手机订阅，AC22 的真实 iPhone 提前 / 到期通知显示未通过，等待用户设备反馈；不能标记已送达。
+
+- Codex 内置浏览器无法处理原生 HTTP Basic 登录挑战（ERR_INVALID_AUTH_CREDENTIALS），因此已改为普通 HTML 密码登录与 HttpOnly / Secure 会话 Cookie；保留 Basic 供主动设置认证头的 API 客户端使用。手机 PWA 的后台同源请求可使用持久会话，测试时不要只验证 curl Basic 成功。

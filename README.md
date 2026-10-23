@@ -24,7 +24,7 @@ npm run build
 npm start  # 构建后的前后端统一由 3001 端口提供
 ```
 
-`.env.example` 列出生产配置。`npm start` 自动加载 `.env`，生产实例必须配置 `APP_PASSWORD` 或已有受控访问入口。账号为 `admin`；默认仅绑定回环地址。
+`.env.example` 列出生产配置。`npm start` 自动加载 `.env`，生产实例必须配置 `APP_PASSWORD` 或已有受控访问入口。网页填写访问密码，会话保持 7 天；API 兼容 `admin` 基础认证。默认仅绑定回环地址。
 
 ## 已实现
 

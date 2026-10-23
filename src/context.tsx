@@ -139,6 +139,11 @@ export function Provider({ children }: { children: ReactNode }) {
         {loadError ? (
           <>
             <p role="alert">{loadError}</p>
+            {loadError.includes("访问已过期") && (
+              <a href="/" target="_blank" rel="noopener noreferrer">
+                重新登录
+              </a>
+            )}
             <button onClick={() => void reload().catch(() => {})}>
               重新连接
             </button>
@@ -155,6 +160,11 @@ export function Provider({ children }: { children: ReactNode }) {
       {loadError && (
         <div className="connection-banner" role="status">
           {loadError} · 当前为上次读取的数据{" "}
+          {loadError.includes("访问已过期") && (
+            <a href="/" target="_blank" rel="noopener noreferrer">
+              重新登录
+            </a>
+          )}
           <button onClick={() => void reload().catch(() => {})}>重试</button>
         </div>
       )}

@@ -469,6 +469,11 @@ export function SettingsPanel() {
           周期模板仅用于新计划，已启用的笼位周期需在“换笼计划”中明确调整。
         </p>
       </FormShell>
+      <form method="post" action="/session/logout" className="danger-zone">
+        <button className="text-button" type="submit">
+          退出当前设备
+        </button>
+      </form>
     </>
   );
 }
