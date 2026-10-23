@@ -40,3 +40,11 @@
 - 抽屉使用原生 dialog，多层抽屉保留上层表单与标签页；body 滚动锁按打开数量管理，不能在多层卸载后残留 hidden。
 - 修改周期的“下次完成后生效”与暂停、通知偏好分别处理，不能用提前 return 吞掉本次暂停操作。
 - 服务与备份脚本编译到 `dist-server`；生产移除开发依赖后不要调用 tsx。systemd 运行编译后的 Node 文件，数据与发布版本分离。
+
+## 已上线环境
+
+- 已按用户授权部署至 `oracle` 的 `https://mouses.ninthflux.com`；当前应用代码提交 `dd18f9f`，systemd 服务 `mouse-nook` 与每日备份已启动。运维路径见 `docs/OPERATIONS.md`。
+- 随机访问密码只存 `/etc/mouse-nook.env` 和本机被忽略的 `data/deployment-access.txt`；不能复制到文档、Git 或日志。生产库从空库开始，本地 6 笼 / 15 鼠为示例。
+- Cloudflare 代理下 TLS-ALPN ACME 挑战失败后，Caddy 自动改用 HTTP-01 并成功取证；不要为了短暂的 525 关闭 TLS 校验。
+- 公网探测中默认 urllib UA 返回 403，正常浏览器 UA 返回 200；应区分代理层拦截与应用的 401，不能误判为数据库或认证故障。
+- 截至本次验收尚无手机订阅，AC22 的真实 iPhone 提前 / 到期通知显示未通过，等待用户设备反馈；不能标记已送达。

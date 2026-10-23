@@ -2,6 +2,10 @@
 
 一个有温度的小鼠照护、繁育与家系记录应用。以 v2.0 PRD 为基线，使用 React、TypeScript、Node 和 SQLite；32 个原创毛绒鼠鼠姿态素材与轻量动效组成真实档案绑定的小窝场景。
 
+![示例小窝首页](docs/assets/implemented-home.jpg)
+
+生产初始为空库；上图为本地示例资料。
+
 ## 本地运行
 
 需要 Node ≥22.13，推荐 Node 24 LTS。
