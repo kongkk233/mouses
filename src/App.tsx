@@ -80,14 +80,27 @@ function CageCard({
           <span>{cage.nickname || purposeLabel[cage.purpose]}</span>
           <ChevronRight size={15} />
         </button>
-        <span
-          className={`occupancy ${overflow ? "warning" : ""}`}
-          title={`全部在笼活体数量，包括未断奶幼鼠`}
-        >
-          {members.length}
-          <span> / {cage.capacity}</span>
-          <MouseIcon size={14} />
-        </span>
+        <div className="cage-capacity-wrap">
+          <span
+            className={`occupancy ${overflow ? "warning" : ""}`}
+            title="全部在笼活体数量，包括未断奶幼鼠"
+          >
+            {members.length}
+            <span> / {cage.capacity}</span>
+            <MouseIcon size={14} />
+          </span>
+          <div
+            className={`capacity-bar ${overflow ? "overflow" : ""}`}
+            aria-hidden="true"
+          >
+            <div
+              className="capacity-fill"
+              style={{
+                width: `${Math.min(100, (members.length / cage.capacity) * 100)}%`,
+              }}
+            />
+          </div>
+        </div>
       </header>
       <CageScene
         cage={cage}

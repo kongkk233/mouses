@@ -890,6 +890,29 @@ svg {
 .occupancy.warning {
   color: #92602d;
 }
+.cage-capacity-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.capacity-bar {
+  width: 48px;
+  height: 3px;
+  border-radius: 2px;
+  background: #eee0d8;
+  overflow: hidden;
+}
+.capacity-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: #c797a4;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+.capacity-bar.overflow .capacity-fill {
+  background: #bf914d;
+}
 .cage-scene {
   height: 196px;
   position: relative;
@@ -1828,9 +1851,9 @@ svg {
   justify-content: flex-end;
   gap: 11px;
   position: sticky;
-  bottom: -31px;
+  bottom: 0;
   background: linear-gradient(#fffcf8e0, #fffcf8 20%);
-  padding: 20px 0 9px;
+  padding: 20px 0 max(9px, env(safe-area-inset-bottom, 0px));
   margin-top: 8px;
   z-index: 3;
   border-top: 1px solid #eee3dd;
@@ -4289,7 +4312,7 @@ svg {
     gap: 17px;
   }
   .form-footer {
-    bottom: -29px;
+    bottom: 0;
   }
   .avatar-picker {
     padding: 11px;
@@ -5152,5 +5175,263 @@ svg {
   }
   .page-footer {
     padding-bottom: 108px;
+  }
+}
+
+/* Dark mode — mirrors the warm-pink palette into a deep-rose-brown surface */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #e2d4d8;
+    background: #1e1618;
+    --ink: #e2d4d8;
+    --muted: #a8929a;
+    --pink: #c97088;
+    --pink-dark: #b85d75;
+    --rose-bg: #2e1f24;
+    --line: #3a2a2e;
+    --sage: #6d9a7e;
+    --gold: #b8823e;
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 92% 10%, #2a1d1f 0, transparent 32%),
+      radial-gradient(ellipse at 0 50%, #261518 0, transparent 35%), #1e1618;
+  }
+  input,
+  select,
+  textarea {
+    border-color: #4a3338;
+    background: #261a1e;
+    color: #e2d4d8;
+  }
+  input:disabled {
+    background: #2a1f22;
+    color: var(--muted);
+  }
+  input[type="checkbox"] {
+    background: #261a1e;
+    border-color: #5a3d44;
+  }
+  .topbar {
+    background: #1e1618e8;
+    border-color: #3a2828;
+  }
+  .global-search {
+    background: #261a1e;
+    border-color: #3d2930;
+    color: #a8929a;
+  }
+  .global-search input {
+    color: #e2d4d8;
+  }
+  .brand strong {
+    color: #d4a8b4;
+  }
+  .brand-mark {
+    background: #2e1f24;
+  }
+  .brand small {
+    color: #9a7e85;
+  }
+  .calendar-entry {
+    color: #a8929a;
+  }
+  .calendar-entry:hover,
+  .calendar-entry.active {
+    background: #2e1f24;
+    color: var(--pink);
+  }
+  .icon-button:hover,
+  .icon-button.active {
+    background: #2e1f24;
+    color: var(--pink);
+  }
+  .cage-card {
+    background: #261a1e;
+    border-color: #3d2a2e;
+    box-shadow: 0 4px 14px #00000022;
+  }
+  .cage-card:hover {
+    border-color: #5a3a42;
+    box-shadow: 0 7px 22px #0000003a;
+  }
+  .cage-card-foot {
+    background: #221820;
+    border-color: #3a2830;
+  }
+  .cage-members {
+    background: #261a1e;
+  }
+  .member-row:hover,
+  .member-row.highlight {
+    background: #2e2024;
+  }
+  .avatar-mini {
+    background: #2e2024;
+  }
+  .empty-members {
+    color: #8a7480;
+  }
+  .overflow-note {
+    background: #2e2010;
+    color: #c8903a;
+  }
+  .today-strip {
+    background: #221820;
+    border-color: #3a2830;
+  }
+  .button {
+    background: #261a1e;
+    border-color: #4a3338;
+    color: #e2d4d8;
+  }
+  .button:hover {
+    background: #2e2024;
+    border-color: #5a4048;
+  }
+  .button.primary {
+    background: var(--pink);
+    border-color: var(--pink);
+    color: #fff;
+  }
+  .button.primary:hover {
+    background: var(--pink-dark);
+    border-color: var(--pink-dark);
+  }
+  .drawer {
+    background: #221820;
+    color: var(--ink);
+    box-shadow: -15px 0 65px #0000004a;
+  }
+  .drawer::backdrop {
+    background: #10080caa;
+  }
+  .drawer-header {
+    background: #221820;
+    border-color: var(--line);
+  }
+  .drawer-content {
+    scrollbar-color: #4a3338 transparent;
+  }
+  .form-footer {
+    background: linear-gradient(#221820e0, #221820 20%);
+    border-color: #3a2830;
+  }
+  .badge {
+    background: #2e2024;
+    color: #a8929a;
+  }
+  .badge.pink {
+    background: #2e1820;
+    color: #c97088;
+  }
+  .badge.sage {
+    background: #182620;
+    color: #6d9a7e;
+  }
+  .badge.gold {
+    background: #261d10;
+    color: #b8823e;
+  }
+  .badge.lilac {
+    background: #22182e;
+    color: #9a7ab8;
+  }
+  .badge.neutral {
+    background: #2a2218;
+    color: #a09080;
+  }
+  .check-list {
+    border-color: var(--line);
+  }
+  .check-item.checked {
+    background: #2e1f24;
+  }
+  .record-line {
+    border-color: var(--line);
+  }
+  .history-list article:not(:last-child):before {
+    background: #4a3338;
+  }
+  .history-dot {
+    background: #1e1618;
+    border-color: #7a5460;
+  }
+  .advanced-filters {
+    background: #221820;
+    border-color: var(--line);
+  }
+  .month-grid {
+    background: #221820;
+    border-color: #3a2830;
+  }
+  .week-labels {
+    background: #2a1e22;
+    border-color: #3a2830;
+  }
+  .calendar-day {
+    border-color: #3a2830;
+  }
+  .calendar-day.other-month {
+    background: #1e1618;
+  }
+  .calendar-day.selected {
+    background: #2a1820;
+    box-shadow: inset 0 0 0 1px #7a4d60;
+  }
+  .day-agenda {
+    background: #221820;
+    border-color: #3a2830;
+  }
+  .schedule-list {
+    background: #221820;
+    border-color: var(--line);
+  }
+  .reminder-card {
+    background: #221820;
+    border-color: #3a2830;
+  }
+  .plan-card {
+    background: #26201e;
+    border-color: #3a3028;
+  }
+  .subtle-notice {
+    background: #26200e;
+    color: #b09060;
+  }
+  .form-callout {
+    background: #162018;
+    color: #6d9a7e;
+  }
+  .form-callout.amber {
+    background: #241808;
+    color: #b8823e;
+  }
+  .breeding-card {
+    background: #221a14;
+    border-color: #3a2e24;
+  }
+  .litter-card {
+    background: #221a14;
+    border-color: #3a2e24;
+  }
+  .litter-card:hover {
+    background: #2a2018;
+  }
+  .family-node {
+    background: #261a18;
+    border-color: #3a2e2a;
+  }
+  .family-node:hover {
+    background: #2e2020;
+  }
+  .family-center > .family-node {
+    background: #2a1820;
+    border-color: #7a4d60;
+    box-shadow: 0 0 0 4px #3a2030;
+  }
+  .mobile-tabbar {
+    background: #1e1618e8;
+    border-color: #3a2828;
   }
 }

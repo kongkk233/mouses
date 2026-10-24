@@ -265,11 +265,11 @@ export function CageScene({
               } as CSSProperties
             }
             aria-label={`${m.code}${m.nickname ? ` · ${m.nickname}` : ""}，${actionLabels[pose]}（趣味动作）`}
-            onMouseEnter={() => {
+            onPointerEnter={() => {
               setFocused(m.id);
               onSelect?.(m.id);
             }}
-            onMouseLeave={() => {
+            onPointerLeave={() => {
               setFocused(null);
               onSelect?.("");
             }}
