@@ -38,7 +38,10 @@ export function Drawer({
   wide?: boolean;
 }) {
   const { back, close, stack } = useApp(),
-    ref = useRef<HTMLDialogElement>(null);
+    ref = useRef<HTMLDialogElement>(null),
+    shellRef = useRef<HTMLDivElement>(null),
+    backRef = useRef(back);
+  backRef.current = back;
   useEffect(() => {
     const dialog = ref.current!;
     dialog.showModal();
@@ -49,6 +52,48 @@ export function Drawer({
       dialog.close();
       openDrawers--;
       if (openDrawers === 0) document.body.style.overflow = initialOverflow;
+    };
+  }, []);
+  useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    let startX = 0,
+      startY = 0,
+      dragging = false;
+    const onStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dragging = false;
+      shell.style.transition = "none";
+    };
+    const onMove = (e: TouchEvent) => {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!dragging) {
+        if (Math.abs(dx) > Math.abs(dy) + 4 && dx > 0) dragging = true;
+        else if (Math.abs(dy) > 8) return;
+      }
+      if (!dragging) return;
+      e.preventDefault();
+      const offset = Math.max(0, dx);
+      shell.style.transform = `translateX(${offset}px)`;
+      shell.style.opacity = String(Math.max(0.55, 1 - offset / 350));
+    };
+    const onEnd = (e: TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - startX;
+      shell.style.transition = "";
+      shell.style.transform = "";
+      shell.style.opacity = "";
+      if (dragging && dx > 90) backRef.current();
+      dragging = false;
+    };
+    shell.addEventListener("touchstart", onStart, { passive: true });
+    shell.addEventListener("touchmove", onMove, { passive: false });
+    shell.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      shell.removeEventListener("touchstart", onStart);
+      shell.removeEventListener("touchmove", onMove);
+      shell.removeEventListener("touchend", onEnd);
     };
   }, []);
   return (
@@ -63,7 +108,7 @@ export function Drawer({
         if (e.target === ref.current) back();
       }}
     >
-      <div className="drawer-shell">
+      <div ref={shellRef} className="drawer-shell">
         <header className="drawer-header">
           <div className="row gap-12">
             {stack.length > 1 && (

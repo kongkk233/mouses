@@ -991,6 +991,44 @@ export default function App() {
           </button>
         </div>
       )}
+      <nav className="mobile-tabbar" aria-label="主导航">
+        <button
+          className={!calendar && view === "cages" ? "active" : ""}
+          onClick={() => {
+            setView("cages");
+            setCalendar(false);
+          }}
+        >
+          <House size={22} />
+          <span>小窝</span>
+        </button>
+        <button
+          className={!calendar && view === "mice" ? "active" : ""}
+          onClick={() => {
+            setView("mice");
+            setCalendar(false);
+          }}
+        >
+          <MouseIcon size={22} />
+          <span>小鼠</span>
+        </button>
+        <button
+          className={calendar ? "active" : ""}
+          onClick={() => setCalendar((v) => !v)}
+        >
+          <CalendarDays size={22} />
+          <span>日历</span>
+        </button>
+        <button onClick={() => open({ kind: "reminders" })}>
+          <span className="tab-notif">
+            <Bell size={22} />
+            {reminders.length > 0 && (
+              <span className="notification-count">{reminders.length}</span>
+            )}
+          </span>
+          <span>提醒</span>
+        </button>
+      </nav>
       <Panels />
     </>
   );

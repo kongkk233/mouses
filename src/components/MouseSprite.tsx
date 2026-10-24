@@ -260,6 +260,7 @@ export function CageScene({
                 top: `${y}%`,
                 "--delay": `${-(m.avatarSeed % 20)}s`,
                 "--wander": `${i % 2 ? 14 : -14}px`,
+                "--breathe-dur": `${(3.2 + (m.avatarSeed % 7) * 0.18).toFixed(2)}s`,
                 zIndex: Math.round(y),
               } as CSSProperties
             }
@@ -288,7 +289,9 @@ export function CageScene({
             </span>
             {pose === "sleep" && (
               <span className="sleep-letters" aria-hidden="true">
-                z<span>z</span>
+                <span>z</span>
+                <span>z</span>
+                <span>z</span>
               </span>
             )}
           </button>
