@@ -456,6 +456,26 @@ export function SettingsPanel() {
             <option value="static">静态</option>
           </select>
         </Field>
+        <Field label="颜色主题">
+          <select
+            value={
+              localStorage.getItem("nook-theme") ??
+              "auto"
+            }
+            onChange={(e) => {
+              const v = e.target.value;
+              localStorage.setItem("nook-theme", v);
+              if (v === "auto")
+                document.documentElement.removeAttribute("data-theme");
+              else
+                document.documentElement.setAttribute("data-theme", v);
+            }}
+          >
+            <option value="auto">跟随系统</option>
+            <option value="light">浅色</option>
+            <option value="dark">深色</option>
+          </select>
+        </Field>
         <label className="toggle-setting">
           <span>个体性格标签</span>
           <input
