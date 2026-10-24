@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { Appearance, Cage, Mouse } from "../../shared/types";
 import { useApp } from "../context";
 import { cageMembers } from "../selectors";
 import { decorativePose, portraitPose, type Pose } from "../../shared/behavior";
 import { SPRITE_VERSION, SPRITE_PARTS } from "../../shared/generated-assets";
+import { sceneBudget } from "../scene-budget";
 export function MouseSprite({
   mouse,
   appearance,
@@ -132,11 +133,13 @@ export function CageScene({
   highlightIds?: string[];
 }) {
   const { state, open } = useApp(),
+    sceneId = useId(),
     ref = useRef<HTMLDivElement>(null),
     [visible, setVisible] = useState(false),
     [pageVisible, setPageVisible] = useState(!document.hidden),
     [tick, setTick] = useState(0),
-    [focused, setFocused] = useState<string | null>(null);
+    [focused, setFocused] = useState<string | null>(null),
+    [active, setActive] = useState(false);
   const all = cageMembers(state, cage.id),
     shown = all.slice(
       0,
@@ -150,12 +153,25 @@ export function CageScene({
     media.addEventListener("change", change);
     return () => media.removeEventListener("change", change);
   }, []);
-  const active =
+  const eligible =
     visible &&
     pageVisible &&
     state.settings.motion !== "static" &&
-    !systemReduced &&
-    index < 6;
+    !systemReduced;
+  useEffect(() => {
+    let mounted = true;
+    const release = sceneBudget.register(sceneId, (value) => {
+      if (mounted) setActive(value);
+    });
+    return () => {
+      mounted = false;
+      release();
+    };
+  }, [sceneId]);
+  useEffect(
+    () => sceneBudget.update(sceneId, eligible, large ? 1 : 0, index),
+    [sceneId, eligible, large, index],
+  );
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => setVisible(entries[0].isIntersecting),
