@@ -11,12 +11,23 @@ import {
 } from "./Primitives";
 import { MouseSprite } from "./MouseSprite";
 import { appearanceFor, coatLabels, coats } from "../../shared/appearance";
-import { addDays, shortDate } from "../../shared/dates";
+import { addDays, shortDate, daysBetween } from "../../shared/dates";
+import {
+  MIN_BIRTH_DATE,
+  EARLY_WEAN_DAYS,
+  careExceptions,
+} from "../../shared/validation";
 import { cageMembers, currentOccurrence } from "../selectors";
 import { purposeLabel, sexLabel, careLabel } from "../../shared/types";
 import type { Appearance } from "../../shared/types";
 
-export function MouseForm({ id }: { id?: string }) {
+export function MouseForm({
+  id,
+  data = {},
+}: {
+  id?: string;
+  data?: Record<string, any>;
+}) {
   const { state, back, open } = useApp(),
     mouse = state.mice.find((m) => m.id === id),
     next =
@@ -34,7 +45,11 @@ export function MouseForm({ id }: { id?: string }) {
     dob: mouse?.dob || state.today,
     dobEstimated: mouse?.dobEstimated || false,
     sex: mouse?.sex || "unknown",
-    cageId: mouse?.cageId || state.cages.find((c) => !c.archived)?.id || "",
+    cageId:
+      mouse?.cageId ||
+      data.cageId ||
+      state.cages.find((c) => !c.archived)?.id ||
+      "",
     motherId: mouse?.motherId || "",
     fatherId: mouse?.fatherId || "",
     fatherStatus: mouse?.fatherStatus || "confirmed",
@@ -47,6 +62,7 @@ export function MouseForm({ id }: { id?: string }) {
     personality: mouse?.personality || "",
     reason: "",
     capacityReason: "",
+    exceptionReason: "",
   });
   const [seed, setSeed] = useState(
       mouse?.avatarSeed || Math.floor(Math.random() * 2 ** 30),
@@ -124,6 +140,7 @@ export function MouseForm({ id }: { id?: string }) {
           <input
             name="dob"
             type="date"
+            min={MIN_BIRTH_DATE}
             max={state.today}
             value={form.dob}
             onChange={(e) => set("dob", e.target.value)}
@@ -166,6 +183,7 @@ export function MouseForm({ id }: { id?: string }) {
         <div className="form-grid">
           <Field label="昵称">
             <input
+              name="nickname"
               value={form.nickname}
               onChange={(e) => set("nickname", e.target.value)}
               placeholder="例如：奶糖"
@@ -173,6 +191,7 @@ export function MouseForm({ id }: { id?: string }) {
           </Field>
           <Field label="品系 / 背景">
             <input
+              name="strain"
               value={form.strain}
               onChange={(e) => set("strain", e.target.value)}
             />
@@ -183,6 +202,7 @@ export function MouseForm({ id }: { id?: string }) {
               value={form.motherId}
               onChange={(v) => set("motherId", v)}
               sex="female"
+              bornBefore={form.dob}
               exclude={id}
               allowArchived
             />
@@ -190,6 +210,8 @@ export function MouseForm({ id }: { id?: string }) {
           <Field label="生物学父亲">
             <MouseSelect
               name="fatherId"
+              sex="male"
+              bornBefore={form.dob}
               value={form.fatherId}
               onChange={(v) => set("fatherId", v)}
               exclude={id}
@@ -217,6 +239,7 @@ export function MouseForm({ id }: { id?: string }) {
           <Field label="寄养母">
             <MouseSelect
               name="fosterMotherId"
+              bornBefore={form.dob}
               value={form.fosterMotherId}
               onChange={(v) => set("fosterMotherId", v)}
               sex="female"
@@ -247,6 +270,25 @@ export function MouseForm({ id }: { id?: string }) {
               />
             </Field>
           )}
+          {form.weaningStatus === "weaned" &&
+            daysBetween(form.dob, form.weanedOn || state.today) <
+              EARLY_WEAN_DAYS &&
+            (!mouse ||
+              mouse.dob !== form.dob ||
+              mouse.weaningStatus !== form.weaningStatus ||
+              (mouse.weanedOn || "") !== form.weanedOn) && (
+              <Field
+                label={`低于 ${EARLY_WEAN_DAYS} 日龄断奶的特殊处理原因 *`}
+                wide
+              >
+                <textarea
+                  name="exceptionReason"
+                  value={form.exceptionReason}
+                  onChange={(e) => set("exceptionReason", e.target.value)}
+                  required
+                />
+              </Field>
+            )}
           <Field label="性格（趣味标签）">
             <select
               value={form.personality}
@@ -327,6 +369,7 @@ export function CageForm({ id }: { id?: string }) {
         </Field>
         <Field label="小窝名称">
           <input
+            name="nickname"
             value={form.nickname}
             onChange={(e) => set("nickname", e.target.value)}
             placeholder="给它取个名字"
@@ -362,16 +405,18 @@ export function CageForm({ id }: { id?: string }) {
           />
         </Field>
       </div>
-      {c && cageMembers(state, c.id).length > Number(form.capacity) && (
-        <Field label="超容量原因">
-          <input
-            name="capacityReason"
-            value={form.capacityReason}
-            onChange={(e) => set("capacityReason", e.target.value)}
-            required
-          />
-        </Field>
-      )}
+      {c &&
+        Number(form.capacity) < c.capacity &&
+        cageMembers(state, c.id).length > Number(form.capacity) && (
+          <Field label="超容量原因">
+            <input
+              name="capacityReason"
+              value={form.capacityReason}
+              onChange={(e) => set("capacityReason", e.target.value)}
+              required
+            />
+          </Field>
+        )}
     </FormShell>
   );
 }
@@ -643,6 +688,7 @@ export function TransferForm({
     [target, setTarget] = useState(""),
     [on, setOn] = useState(state.today),
     [reason, setReason] = useState(""),
+    [exceptionReason, setExceptionReason] = useState(""),
     [endNursing, setEndNursing] = useState(false),
     [destinations, setDestinations] = useState<Record<string, string>>({}),
     [split, setSplit] = useState(false),
@@ -674,15 +720,29 @@ export function TransferForm({
       ),
     ),
   ];
+  const exceptions = careExceptions(
+    state,
+    selected,
+    Object.fromEntries(
+      selected.map((id) => [
+        id,
+        (split ? destinations[id] : target) ||
+          state.mice.find((m) => m.id === id)!.cageId!,
+      ]),
+    ),
+    on,
+    wean,
+  );
   return (
     <FormShell
       title={wean ? "登记实际断奶" : "转笼"}
       type={wean ? "litter.wean" : "mouse.transfer"}
       payload={() => ({
         mouseIds: selected,
-        cageId: target,
+        cageId: split ? "" : target,
         date: on,
         capacityReason: reason,
+        exceptionReason,
         endNursing,
         destinations: split ? destinations : undefined,
       })}
@@ -824,6 +884,21 @@ export function TransferForm({
           onReason={setReason}
         />
       ))}
+      {exceptions.length > 0 && (
+        <div className="capacity-preview overflow" role="status">
+          {exceptions.map((warning) => (
+            <p key={warning}>{warning}</p>
+          ))}
+          <Field label="已核对上述情况，特殊处理原因 *">
+            <textarea
+              name="exceptionReason"
+              value={exceptionReason}
+              onChange={(e) => setExceptionReason(e.target.value)}
+              required
+            />
+          </Field>
+        </div>
+      )}
       <div className="preview-box">
         <strong>
           {selected.length} 只小鼠将被记录{wean ? "断奶" : "转笼"}
@@ -848,10 +923,11 @@ export function TransferForm({
 }
 export function CareForm({ data = {} }: { data?: Record<string, any> }) {
   const { state } = useApp(),
+    task = state.careTasks.find((t) => t.id === data.taskId),
     [selected, setSelected] = useState<string[]>(data.cageIds || []),
     [kind, setKind] = useState(data.kind || "water"),
     [on, setOn] = useState(data.date || state.today),
-    [notes, setNotes] = useState(""),
+    [notes, setNotes] = useState(task?.notes || ""),
     [value, setValue] = useState(""),
     [observer, setObserver] = useState(""),
     [photoUrl, setPhotoUrl] = useState(""),
@@ -962,13 +1038,14 @@ export function CareForm({ data = {} }: { data?: Record<string, any> }) {
         <p className="field-note">表型观察请选择一个笼位和一只具体小鼠。</p>
       )}
       {!planned && kind === "weight" && (
-        <Field label="体重 / 克">
+        <Field label="体重 / 克 *">
           <input
             name="value"
             type="number"
-            min="0"
+            min="0.01"
             max="1000"
             step="0.01"
+            required
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />

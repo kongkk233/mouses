@@ -126,9 +126,18 @@ test("age reminders use days, remain stable across birthday correction and archi
   assert.equal(s.reminders.length, before);
   run("mouse.archive", { mouseIds: [m], date: s.today, status: "transferred" });
   reconcile(s);
+  assert.equal(s.reminders.find((x) => x.kind === "age140")?.status, "handled");
   assert.equal(
-    s.reminders.find((x) => x.kind === "age70")?.status,
-    "cancelled",
+    s.reminders.find((x) => x.kind === "age70"),
+    undefined,
+  );
+  assert.equal(
+    s.reminders.find((x) => x.kind === "age140")?.basisChanged,
+    true,
+  );
+  assert.equal(
+    s.reminders.some((x) => x.subjectId === m && x.status === "pending"),
+    false,
   );
 });
 test("cleaning schedules use actual completion, historical supplements do not overwrite", () => {

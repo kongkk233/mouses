@@ -41,6 +41,7 @@ const titles: Record<string, string> = {
   litterForm: "登记一窝",
   litterEdit: "更正窝次",
   settings: "小窝设置",
+  motionInfo: "关于鼠鼠动作",
   appearance: "形象工作室",
   archive: "去向与归档",
   breedingStop: "繁殖资格",
@@ -88,7 +89,7 @@ function PanelLayer({
       content = <LitterDetail id={id!} />;
       break;
     case "mouseForm":
-      content = <MouseForm id={id} />;
+      content = <MouseForm id={id} data={data} />;
       break;
     case "cageForm":
       content = <CageForm id={id} />;
@@ -122,6 +123,13 @@ function PanelLayer({
       break;
     case "settings":
       content = <SettingsPanel />;
+      break;
+    case "motionInfo":
+      content = (
+        <p className="body-copy">
+          鼠鼠的睡觉、饮水、进食等动作是趣味演绎。每只角色对应真实档案，动作与道具不表示实际行为或食水余量。实际健康、繁育和照护情况以登记记录为准。可在小窝设置中调整动效，系统开启减少动态效果时自动静态显示。
+        </p>
+      );
       break;
     case "appearance":
       content = <AppearanceForm id={id!} />;

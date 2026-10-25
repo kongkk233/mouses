@@ -6,6 +6,9 @@ import { z } from "zod";
 import { Store } from "./store.js";
 import { DomainError } from "./domain.js";
 import { PushService } from "./notifications.js";
+import { backup } from "node:sqlite";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 
 const app = express(),
   store = new Store(),
@@ -58,6 +61,35 @@ app.get("/api/health", (_req, res) =>
   res.json({ ok: true, service: "mouse-nook" }),
 );
 app.get("/api/state", (_req, res) => res.json(store.snapshot()));
+app.get("/api/export", (_req, res) => {
+  const state = store.snapshot();
+  res.attachment(`mouse-nook-${state.today}.json`).json({
+    format: "mouse-nook",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    state,
+  });
+});
+app.get("/api/backup", async (_req, res, next) => {
+  let directory: string | undefined;
+  try {
+    directory = await mkdtemp(resolve(tmpdir(), "mouse-nook-backup-"));
+    const file = resolve(directory, "mouse-nook.sqlite");
+    await backup(store.db, file);
+    const temporary = directory;
+    res.download(
+      file,
+      `mouse-nook-${new Date().toISOString().slice(0, 10)}.sqlite`,
+      (error) => {
+        void rm(temporary, { recursive: true, force: true }).catch(() => {});
+        if (error && !res.headersSent) next(error);
+      },
+    );
+  } catch (error) {
+    if (directory) await rm(directory, { recursive: true, force: true });
+    next(error);
+  }
+});
 const commandSchema = z
   .object({
     type: z.string().min(1).max(80),
@@ -111,8 +143,9 @@ if (existsSync(dist)) {
       },
     }),
   );
-  app.get("/{*path}", (_req, res) => res.sendFile(resolve(dist, "index.html")));
+  app.get("/", (_req, res) => res.sendFile(resolve(dist, "index.html")));
 }
+app.use((_req, res) => res.status(404).type("text").send("页面或资源不存在"));
 app.use(
   (
     error: any,

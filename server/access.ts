@@ -144,7 +144,7 @@ export function accessGate() {
       return;
     }
     res.setHeader("Cache-Control", "no-store");
-    if (req.path.startsWith("/api/"))
+    if (req.path !== "/")
       res.status(401).json({
         error: "访问已过期，请重新登录后重试",
         field: "authentication",

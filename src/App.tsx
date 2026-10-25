@@ -756,9 +756,7 @@ export default function App() {
                 {motion ? "小窝生活进行中" : "小窝静静休息中"}
                 <button
                   aria-label="关于鼠鼠动作"
-                  onClick={() =>
-                    open({ kind: "settings", data: { section: "appearance" } })
-                  }
+                  onClick={() => open({ kind: "motionInfo" })}
                 >
                   ⓘ
                 </button>

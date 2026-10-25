@@ -14,6 +14,12 @@ import { careLabel } from "../shared/types.js";
 import { safePhotoLink } from "../shared/photos.js";
 import { addDays, daysBetween, todayIn, validDate } from "../shared/dates.js";
 import {
+  MIN_BIRTH_DATE,
+  EARLY_WEAN_DAYS,
+  textLimit,
+  careExceptions,
+} from "../shared/validation.js";
+import {
   appearanceFor,
   litterAppearance,
   coats,
@@ -36,8 +42,31 @@ function need(
   if (!condition) throw new DomainError(message, field);
 }
 const uid = () => randomUUID();
-const text = (value: unknown, limit = 2000) =>
-  typeof value === "string" ? value.trim().slice(0, limit) : "";
+const text = (value: unknown, limit = 2000, field = "") => {
+  const result = typeof value === "string" ? value.trim() : "";
+  need(
+    result.length <= limit,
+    `最多可填写 ${limit} 个字符，当前为 ${result.length} 个`,
+    field,
+  );
+  return result;
+};
+function birthDate(value: unknown, field: string, today: string) {
+  const result = date(value, field, today);
+  need(result >= MIN_BIRTH_DATE, `出生日期不能早于 ${MIN_BIRTH_DATE}`, field);
+  return result;
+}
+function validateEarlyWeaning(s: AppState, m: Mouse, reason: unknown) {
+  if (
+    m.weaningStatus === "weaned" &&
+    daysBetween(m.dob, m.weanedOn || s.today) < EARLY_WEAN_DAYS
+  )
+    need(
+      text(reason),
+      `低于 ${EARLY_WEAN_DAYS} 日龄登记断奶，请填写特殊处理原因`,
+      "exceptionReason",
+    );
+}
 function date(value: unknown, field: string, today?: string): string {
   need(validDate(value), "请填写有效日期", field);
   if (today) need(value <= today, "实际日期不能晚于今天", field);
@@ -78,8 +107,13 @@ function code(
   rows: { code: string; id: string; aliases?: string[] }[],
   id?: string,
 ): string {
-  const result = text(value, 64);
+  const result = text(value, 64, "code");
   need(result, "编号不能为空", "code");
+  need(
+    !/[<>\u0000-\u001f\u007f]/.test(result),
+    "编号不能含尖括号或控制字符",
+    "code",
+  );
   need(
     !rows.some(
       (r) =>
@@ -235,12 +269,12 @@ function makeMouse(s: AppState, p: Record<string, any>): Mouse {
     id: uid(),
     code: code(p.code, s.mice),
     aliases: [],
-    nickname: text(p.nickname, 40),
-    genotype: text(p.genotype, 120),
-    strain: text(p.strain, 120),
-    dob: date(p.dob, "dob", s.today),
+    nickname: text(p.nickname, 40, "nickname"),
+    genotype: text(p.genotype, 120, "genotype"),
+    strain: text(p.strain, 120, "strain"),
+    dob: birthDate(p.dob, "dob", s.today),
     dobEstimated: !!p.dobEstimated,
-    sex: ["male", "female", "unknown"].includes(p.sex) ? p.sex : "unknown",
+    sex: p.sex ?? "unknown",
     cageId: c.id,
     status: "active",
     motherId: p.motherId || null,
@@ -262,6 +296,19 @@ function makeMouse(s: AppState, p: Record<string, any>): Mouse {
     breedingStopped: false,
     version: 1,
   };
+  need(["male", "female", "unknown"].includes(m.sex), "性别无效", "sex");
+  need(
+    p.weaningStatus == null ||
+      ["unknown", "unweaned", "weaned"].includes(p.weaningStatus),
+    "断奶状态无效",
+    "weaningStatus",
+  );
+  for (const key of ["motherStatus", "fatherStatus"])
+    need(
+      p[key] == null || ["confirmed", "candidate"].includes(p[key]),
+      "关系状态无效",
+      key,
+    );
   if (p.appearance) m.appearance = safeAppearance(p.appearance, seed);
   if (m.weanedOn) {
     need(m.weanedOn >= m.dob, "断奶日期不能早于出生日期", "weanedOn");
@@ -272,6 +319,7 @@ function makeMouse(s: AppState, p: Record<string, any>): Mouse {
     );
   }
   validateParents(s, m);
+  validateEarlyWeaning(s, m, p.exceptionReason);
   return m;
 }
 function safeAppearance(value: any, seed: number): Mouse["appearance"] {
@@ -391,6 +439,27 @@ export function reconcile(s: AppState, now = new Date()) {
       if (first) newOccurrence(s, cage, first);
     }
   }
+  const registered = new Map<string, string>();
+  const birthLitters = new Map(s.mice.map((m) => [m.id, m.birthLitterId]));
+  const existingAgeIds = new Set(
+    s.reminders
+      .filter((r) => r.kind === "age70" || r.kind === "age140")
+      .map((r) => r.id),
+  );
+  for (const e of s.events) {
+    if (!["mouse.create", "litter.create"].includes(e.type)) continue;
+    // Mouse events use registration dates; litter events use the actual birth date.
+    const on =
+      e.type === "mouse.create" || !Number.isFinite(Date.parse(e.createdAt))
+        ? e.date
+        : todayIn(s.settings.timezone, new Date(e.createdAt));
+    for (const id of e.mouseIds)
+      if (
+        !registered.has(id) &&
+        (e.type === "mouse.create" || birthLitters.get(id) === e.litterId)
+      )
+        registered.set(id, on);
+  }
   for (const m of s.mice)
     for (const days of [70, 140] as const)
       upsertReminder(
@@ -402,7 +471,10 @@ export function reconcile(s: AppState, now = new Date()) {
           dueOn: addDays(m.dob, days),
           title: `${m.code} · 满 ${days / 7} 周${m.dobEstimated ? "（估计生日）" : ""}`,
         },
-        m.status === "active",
+        m.status === "active" &&
+          addDays(m.dob, days) >=
+            (registered.get(m.id) ||
+              (existingAgeIds.has(`age:${m.id}:${days}`) ? m.dob : s.today)),
       );
   for (const o of s.occurrences) {
     const c = get(s.cages, o.cageId);
@@ -510,27 +582,49 @@ export function applyCommand(
   type: string,
   p: Record<string, any>,
 ): Record<string, unknown> {
+  for (const field of [
+    "code",
+    "nickname",
+    "genotype",
+    "strain",
+    "personality",
+    "phenotype",
+    "notes",
+    "reason",
+    "capacityReason",
+    "exceptionReason",
+    "differenceNote",
+    "evidence",
+    "outcome",
+    "observer",
+    "convention",
+    "photoUrl",
+  ])
+    if (typeof p[field] === "string") text(p[field], textLimit(field), field);
   switch (type) {
     case "cage.create": {
       const cage: Cage = {
         id: uid(),
         code: code(p.code, s.cages),
-        nickname: text(p.nickname, 40),
+        nickname: text(p.nickname, 40, "nickname"),
         capacity: integer(
           p.capacity ?? s.settings.defaultCapacity,
           1,
           500,
           "capacity",
         ),
-        purpose: ["normal", "breeding", "nursery", "other"].includes(p.purpose)
-          ? p.purpose
-          : "normal",
+        purpose: p.purpose ?? "normal",
         lastCleanedOn: null,
         plan: null,
         archived: false,
         notes: text(p.notes),
         version: 1,
       };
+      need(
+        ["normal", "breeding", "nursery", "other"].includes(cage.purpose),
+        "用途无效",
+        "purpose",
+      );
       s.cages.push(cage);
       event(s, type, `建立 ${cage.code} 小窝`, s.today, { cageIds: [cage.id] });
       return { id: cage.id };
@@ -539,7 +633,8 @@ export function applyCommand(
       const c = activeCage(s, p.id),
         old = structuredClone(c);
       c.code = code(p.code ?? c.code, s.cages, c.id);
-      if (p.nickname !== undefined) c.nickname = text(p.nickname, 40);
+      if (p.nickname !== undefined)
+        c.nickname = text(p.nickname, 40, "nickname");
       if (p.capacity !== undefined)
         c.capacity = integer(p.capacity, 1, 500, "capacity");
       if (p.purpose !== undefined) {
@@ -551,7 +646,7 @@ export function applyCommand(
         c.purpose = p.purpose;
       }
       if (p.notes !== undefined) c.notes = text(p.notes);
-      capacity(s, c.id, p.capacityReason);
+      if (c.capacity < old.capacity) capacity(s, c.id, p.capacityReason);
       c.version++;
       event(s, type, `更新 ${c.code} 笼位`, s.today, {
         cageIds: [c.id],
@@ -576,15 +671,26 @@ export function applyCommand(
       need(!members(s, c.id).length, "有成员的笼位不能删除");
       need(
         !s.events.some(
-          (e) => e.cageIds.includes(c.id) && e.type !== "cage.create",
+          (e) =>
+            e.cageIds.includes(c.id) &&
+            !["cage.create", "cage.archive", "cage.update"].includes(e.type),
         ) &&
+          !s.mice.some((m) => m.cageId === c.id) &&
+          !s.litters.some((l) => l.cageId === c.id) &&
+          !s.breedings.some((b) => b.cageId === c.id) &&
           !s.occurrences.some((o) => o.cageId === c.id) &&
           !s.careTasks.some((t) => t.cageId === c.id),
-        "笼位已有历史，请使用归档",
+        c.archived
+          ? "此笼位已归档，业务历史需保留，不能彻底删除"
+          : "笼位已有业务历史，请使用归档",
       );
       s.cages = s.cages.filter((x) => x.id !== c.id);
       s.events = s.events.filter(
-        (e) => !(e.type === "cage.create" && e.cageIds.includes(c.id)),
+        (e) =>
+          !(
+            ["cage.create", "cage.archive", "cage.update"].includes(e.type) &&
+            e.cageIds.includes(c.id)
+          ),
       );
       return {};
     }
@@ -601,6 +707,7 @@ export function applyCommand(
           mouseIds: [m.id],
           cageIds: [m.cageId!],
           notes: text(p.capacityReason),
+          details: { exceptionReason: text(p.exceptionReason) },
         },
       );
       return { id: m.id };
@@ -620,17 +727,13 @@ export function applyCommand(
         "phenotype",
         "personality",
       ] as const)
-        if (p[key] !== undefined)
-          m[key] = text(
-            p[key],
-            key === "notes" || key === "phenotype" ? 2000 : 120,
-          );
+        if (p[key] !== undefined) m[key] = text(p[key], textLimit(key), key);
       if (p.sex !== undefined) {
         need(["male", "female", "unknown"].includes(p.sex), "性别无效", "sex");
         m.sex = p.sex;
       }
       if (p.dob !== undefined) {
-        const dob = date(p.dob, "dob", s.today);
+        const dob = birthDate(p.dob, "dob", s.today);
         need(
           !m.birthLitterId || dob === m.dob,
           "同窝生日请在窝次中整体更正",
@@ -683,6 +786,30 @@ export function applyCommand(
         );
       if (p.breedingStopped !== undefined)
         m.breedingStopped = !!p.breedingStopped;
+      if (
+        ["dob", "weaningStatus", "weanedOn"].some(
+          (key) => (old as any)[key] !== (m as any)[key],
+        )
+      )
+        validateEarlyWeaning(s, m, p.exceptionReason);
+      for (const child of s.mice) {
+        for (const [key, sex, label] of [
+          ["motherId", "female", "母亲"],
+          ["fatherId", "male", "父亲"],
+          ["fosterMotherId", "female", "寄养母"],
+        ] as const) {
+          const confirmed =
+            key === "fosterMotherId" ||
+            child[key === "motherId" ? "motherStatus" : "fatherStatus"] ===
+              "confirmed";
+          if (child[key] === m.id && confirmed)
+            need(
+              m.sex === sex,
+              `${m.code} 已是 ${child.code} 的已确认${label}，不能修改为此性别`,
+              "sex",
+            );
+        }
+      }
       validateAllParents(s);
       m.version++;
       event(
@@ -693,7 +820,11 @@ export function applyCommand(
         {
           mouseIds: [m.id],
           notes: text(p.reason),
-          details: { old, current: structuredClone(m) },
+          details: {
+            old,
+            current: structuredClone(m),
+            exceptionReason: text(p.exceptionReason),
+          },
         },
       );
       return { id: m.id };
@@ -794,6 +925,24 @@ export function applyCommand(
       need(selected.length, "请勾选实际操作的小鼠", "mouseIds");
       const on = date(p.date, "date", s.today);
       if (p.cageId) activeCage(s, p.cageId);
+      const destinations = Object.fromEntries(
+        selected.map((id) => [
+          id,
+          p.destinations?.[id] || p.cageId || get(s.mice, id).cageId,
+        ]),
+      );
+      const exceptions = careExceptions(
+        s,
+        selected,
+        destinations,
+        on,
+        type === "litter.wean",
+      );
+      need(
+        !exceptions.length || text(p.exceptionReason),
+        `${exceptions.join("；")}，请填写特殊处理原因`,
+        "exceptionReason",
+      );
       const targets = new Set<string>();
       for (const id of selected) {
         const m = get(s.mice, id);
@@ -811,6 +960,7 @@ export function applyCommand(
             cageIds: [oldCage],
             litterId: m.birthLitterId || undefined,
             notes: text(p.notes),
+            details: { exceptionReason: text(p.exceptionReason) },
           });
         } else need(oldCage !== targetId, `${m.code} 已在目标笼位`, "cageId");
         if (oldCage !== targetId) {
@@ -835,7 +985,11 @@ export function applyCommand(
               mouseIds: [id],
               cageIds: [oldCage, targetId],
               notes: text(p.capacityReason || p.notes),
-              details: { from: oldCage, to: targetId },
+              details: {
+                from: oldCage,
+                to: targetId,
+                exceptionReason: text(p.exceptionReason),
+              },
             },
           );
         }
@@ -954,6 +1108,11 @@ export function applyCommand(
       const o = get(s.occurrences, p.id, "换笼实例");
       need(o.status === "pending", "这次计划已完成或暂停");
       o.scheduledOn = date(p.date, "date");
+      need(
+        o.scheduledOn >= s.today,
+        "新的计划执行日期不能早于今天；补录实际换笼请使用登记换笼",
+        "date",
+      );
       need(text(p.reason), "改期需要填写原因", "reason");
       o.adjustmentReason = text(p.reason);
       o.snoozedUntil = null;
@@ -1093,7 +1252,7 @@ export function applyCommand(
     }
     case "care.plan": {
       const on = date(p.date, "date");
-      need(careLabel[p.kind], "照护类型无效", "kind");
+      need(Object.hasOwn(careLabel, p.kind), "照护类型无效", "kind");
       const selected = ids(p.cageIds);
       need(selected.length, "请选择笼位");
       for (const id of selected) {
@@ -1117,9 +1276,25 @@ export function applyCommand(
     case "care.record": {
       if (p.litterId) get(s.litters, p.litterId, "窝次");
       const on = date(p.date, "date", s.today);
-      need(careLabel[p.kind], "照护类型无效", "kind");
+      need(Object.hasOwn(careLabel, p.kind), "照护类型无效", "kind");
       const selected = ids(p.cageIds);
       need(selected.length, "请选择笼位");
+      const task = p.taskId ? get(s.careTasks, p.taskId, "照护待办") : null;
+      if (task) {
+        need(
+          task.status === "pending",
+          "这项照护待办已完成或取消，请刷新查看",
+          "taskId",
+        );
+        need(
+          selected.length === 1 &&
+            task.cageId === selected[0] &&
+            task.kind === p.kind &&
+            task.mouseId === (p.mouseId || null),
+          "待办与照护对象不符",
+          "taskId",
+        );
+      }
       const photoUrl = text(p.photoUrl, 2049);
       need(
         !photoUrl || safePhotoLink(photoUrl),
@@ -1134,11 +1309,19 @@ export function applyCommand(
         );
         need(text(p.notes), "请填写实际观察到的表型", "notes");
       }
-      const value = p.value === "" || p.value == null ? null : Number(p.value);
+      const value =
+        p.value == null || (typeof p.value === "string" && !p.value.trim())
+          ? null
+          : Number(p.value);
+      need(
+        p.kind !== "weight" || value !== null,
+        "称重时必须填写体重",
+        "value",
+      );
       need(
         value === null ||
-          (Number.isFinite(value) && value >= 0 && value <= 1000),
-        "重量应为 0–1000 克",
+          (Number.isFinite(value) && value > 0 && value <= 1000),
+        "体重必须大于 0 且不超过 1000 克",
         "value",
       );
       for (const id of selected) {
@@ -1161,6 +1344,7 @@ export function applyCommand(
               observer: text(p.observer, 80),
               photoUrl: photoUrl ? safePhotoLink(photoUrl) : "",
               experimentalFact: p.experimentalFact !== false,
+              taskNotes: task?.notes || "",
             },
             litterId: p.litterId || undefined,
           },
@@ -1340,7 +1524,13 @@ export function applyCommand(
       const c = activeCage(s, p.cageId);
       const on = date(p.bornOn, "bornOn", s.today),
         count = integer(p.bornAlive, 0, 100, "bornAlive"),
-        total = integer(p.birthTotal ?? count, count, 200, "birthTotal");
+        total = integer(p.birthTotal ?? count, 0, 200, "birthTotal");
+      need(total >= count, "历史出生总数不能少于当前活体幼鼠数", "birthTotal");
+      need(
+        on >= MIN_BIRTH_DATE,
+        `出生日期不能早于 ${MIN_BIRTH_DATE}`,
+        "bornOn",
+      );
       need(
         total === count || text(p.differenceNote),
         "历史总数与当前活体不同，请填写差额说明",
@@ -1364,6 +1554,12 @@ export function applyCommand(
         );
       });
       const choice = integer(p.appearanceChoice ?? 0, 0, 2, "appearanceChoice");
+      if (count > 0)
+        need(
+          text(p.code).length <= 59,
+          "有活体幼鼠的窝号最多 59 个字符，需为幼鼠编号预留后缀",
+          "code",
+        );
       need(
         count === 0 || p.appearanceConfirmed,
         "请确认同窝外观候选后保存",
@@ -1435,6 +1631,7 @@ export function applyCommand(
           fatherStatus: l.fatherStatus,
           fosterMotherId: l.fosterMotherId,
           weaningStatus: p.weaningStatus || "unweaned",
+          exceptionReason: p.exceptionReason,
           avatarSeed: seed + i * 107,
         });
         m.birthLitterId = l.id;
@@ -1466,6 +1663,7 @@ export function applyCommand(
           birthTotal: total,
           appearanceChoice: choice,
           priorBreedingRegistered: !!l.breedingId,
+          exceptionReason: text(p.exceptionReason),
         },
       });
       return { id: l.id };
@@ -1474,7 +1672,8 @@ export function applyCommand(
       const l = get(s.litters, p.id),
         old = structuredClone(l);
       need(text(p.reason), "窝次更正需要填写原因", "reason");
-      if (p.bornOn !== undefined) l.bornOn = date(p.bornOn, "bornOn", s.today);
+      if (p.bornOn !== undefined)
+        l.bornOn = birthDate(p.bornOn, "bornOn", s.today);
       if (p.motherId !== undefined) l.motherId = p.motherId || null;
       if (p.fosterMotherId !== undefined)
         l.fosterMotherId = p.fosterMotherId || null;
@@ -1492,6 +1691,8 @@ export function applyCommand(
         m.fosterMotherId = l.fosterMotherId;
         if (m.weanedOn)
           need(m.weanedOn >= m.dob, "更正后的生日晚于实际断奶日期");
+        if (l.bornOn !== old.bornOn)
+          validateEarlyWeaning(s, m, p.exceptionReason);
         m.version++;
       }
       if (l.motherId)
@@ -1521,7 +1722,7 @@ export function applyCommand(
           .filter((m) => m.birthLitterId === l.id)
           .map((m) => m.id),
         notes: text(p.reason),
-        details: { old, current: l },
+        details: { old, current: l, exceptionReason: text(p.exceptionReason) },
       });
       return {};
     }

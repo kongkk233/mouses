@@ -440,6 +440,7 @@ export function OccurrenceDetail({ id }: { id: string }) {
               <input
                 name="date"
                 type="date"
+                min={state.today}
                 required
                 value={on}
                 onChange={(e) => setOn(e.target.value)}

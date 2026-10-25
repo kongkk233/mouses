@@ -153,7 +153,9 @@ export function CageDetail({ id }: { id: string }) {
               action={
                 <button
                   className="button"
-                  onClick={() => open({ kind: "mouseForm" })}
+                  onClick={() =>
+                    open({ kind: "mouseForm", data: { cageId: id } })
+                  }
                 >
                   登记小鼠
                 </button>

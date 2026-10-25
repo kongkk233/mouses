@@ -49,6 +49,13 @@ ssh oracle 'sudo systemctl start mouse-nook-backup.service'
 
 ## 数据恢复
 
+设置页的“数据备份”提供两种下载，均需要当前访问认证且响应不缓存：
+
+- **导出全部资料（JSON）**：`GET /api/export`，包含格式 `mouse-nook`、版本 `1`、导出时间以及完整业务 `state`，用于离机留存和数据分析，不包含服务器通知私钥。当前没有 JSON 自动导入入口。
+- **下载完整备份（SQLite）**：`GET /api/backup`，使用 SQLite 在线备份接口生成一致性快照；包含通知订阅、私钥与操作去重记录，可用于下面的恢复流程。下载后妥善保管，不公开分享。
+
+网页下载与服务器每日备份互相补充。导出不会清空数据，也不会修改亲缘或历史记录。
+
 1. 停止生产服务；保留现有数据库与最后一份备份。
 2. 用当前版本 `dist-server/scripts/restore.js` 指向备份，指定 `DATA_DIR=/var/lib/mouse-nook`，显式使用 `--confirm-replace`。
 3. 工具检查 SQLite 完整性、架构版本和核心表，发现运行中的本项目进程时拒绝覆盖；旧目标库自动保留恢复前备份。

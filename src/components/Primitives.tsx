@@ -2,6 +2,8 @@ import {
   useEffect,
   useRef,
   useState,
+  cloneElement,
+  isValidElement,
   type FormEvent,
   type ReactNode,
 } from "react";
@@ -19,6 +21,7 @@ import { sexLabel } from "../../shared/types";
 import { MouseSprite } from "./MouseSprite";
 import { mouseTags } from "../selectors";
 import { safePhotoLink } from "../../shared/photos";
+import { textLimit } from "../../shared/validation";
 export const Badge = ({
   children,
   tone = "muted",
@@ -176,6 +179,32 @@ export function FormShell({
       ref={form}
       className="record-form"
       onSubmit={submit}
+      onInvalidCapture={(e) => {
+        const input = e.target as HTMLInputElement;
+        input.setCustomValidity("");
+        const v = input.validity;
+        const message = v.valueMissing
+          ? "请填写此项或完成勾选"
+          : v.rangeUnderflow
+            ? input.name === "birthTotal"
+              ? "历史出生总数不能少于当前活体幼鼠数"
+              : `请填写不小于 ${input.min} 的值`
+            : v.rangeOverflow
+              ? `请填写不大于 ${input.max} 的值`
+              : v.stepMismatch
+                ? "请填写符合精度要求的数值"
+                : v.tooLong
+                  ? `最多可填写 ${input.maxLength} 个字符`
+                  : v.typeMismatch
+                    ? "请填写有效的格式"
+                    : "请检查此项内容";
+        input.setCustomValidity(message);
+      }}
+      onInputCapture={(e) => {
+        const input = e.target as HTMLInputElement;
+        if (typeof input.setCustomValidity === "function")
+          input.setCustomValidity("");
+      }}
       aria-label={title}
     >
       {children}
@@ -233,10 +262,39 @@ export function Field({
   wide?: boolean;
   hint?: string;
 }) {
+  const child = isValidElement<{
+    name?: string;
+    type?: string;
+    maxLength?: number;
+    value?: unknown;
+  }>(children)
+    ? children
+    : null;
+  const isText =
+    child &&
+    (child.type === "textarea" ||
+      (child.type === "input" &&
+        [undefined, "text", "url", "email", "search"].includes(
+          child.props.type,
+        )));
+  const limit = isText
+    ? (child.props.maxLength ?? textLimit(child.props.name || ""))
+    : undefined;
+  const count =
+    typeof child?.props.value === "string" ? child.props.value.length : 0;
   return (
     <label className={`field ${wide ? "span-2" : ""}`}>
-      <span>{label}</span>
-      {children}
+      <span className="field-heading">
+        <span>{label}</span>
+        {limit !== undefined && (
+          <small className="field-count">
+            {count}/{limit}
+          </small>
+        )}
+      </span>
+      {limit !== undefined && child
+        ? cloneElement(child, { maxLength: limit })
+        : children}
       {hint && <small>{hint}</small>}
     </label>
   );
@@ -298,52 +356,65 @@ export function History({
   const { state } = useApp();
   return events.length ? (
     <div className="history-list">
-      {events.slice(0, shown).map((e) => (
-        <article key={e.id} className={e.voided ? "voided" : ""}>
-          <span className="history-dot" />
-          <div>
-            <time>
-              {e.date}{" "}
-              <span>
-                {new Date(e.createdAt).toLocaleTimeString("zh-CN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: state.settings.timezone,
-                })}
-              </span>
-            </time>
-            <strong>
-              {e.title}
-              {e.voided ? " · 已撤销" : ""}
-            </strong>
-            {e.notes && <p>{e.notes}</p>}
-            {e.type === "care.record" && (
-              <div className="history-evidence">
-                {typeof e.details.observer === "string" &&
-                  e.details.observer && <span>{e.details.observer}</span>}
-                {e.details.kind === "phenotype" && (
-                  <span>
-                    {e.details.experimentalFact === false
-                      ? "日常观察"
-                      : "实验事实"}
-                  </span>
+      {events.slice(0, shown).map((e) => {
+        const taskNotes =
+          typeof e.details.taskNotes === "string" && e.details.taskNotes
+            ? e.details.taskNotes
+            : state.careTasks.find((t) => t.eventId === e.id)?.notes;
+        return (
+          <article key={e.id} className={e.voided ? "voided" : ""}>
+            <span className="history-dot" />
+            <div>
+              <time>
+                {e.date}{" "}
+                <span>
+                  {new Date(e.createdAt).toLocaleTimeString("zh-CN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: state.settings.timezone,
+                  })}
+                </span>
+              </time>
+              <strong>
+                {e.title}
+                {e.voided ? " · 已撤销" : ""}
+              </strong>
+              {e.notes && <p>{e.notes}</p>}
+              {typeof e.details.exceptionReason === "string" &&
+                e.details.exceptionReason && (
+                  <p>特殊处理原因：{e.details.exceptionReason}</p>
                 )}
-                {safePhotoLink(e.details.photoUrl) && (
-                  <a
-                    href={safePhotoLink(e.details.photoUrl)!}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-button"
-                  >
-                    <ExternalLink size={13} />
-                    查看照片
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
-        </article>
-      ))}
+              {taskNotes && taskNotes !== e.notes && (
+                <p>待办备注：{taskNotes}</p>
+              )}
+              {e.type === "care.record" && (
+                <div className="history-evidence">
+                  {typeof e.details.observer === "string" &&
+                    e.details.observer && <span>{e.details.observer}</span>}
+                  {e.details.kind === "phenotype" && (
+                    <span>
+                      {e.details.experimentalFact === false
+                        ? "日常观察"
+                        : "实验事实"}
+                    </span>
+                  )}
+                  {safePhotoLink(e.details.photoUrl) && (
+                    <a
+                      href={safePhotoLink(e.details.photoUrl)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-button"
+                    >
+                      <ExternalLink size={13} />
+                      查看照片
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </article>
+        );
+      })}
       {events.length > shown && (
         <button
           type="button"
@@ -383,6 +454,7 @@ export function MouseSelect({
   exclude,
   allowArchived = false,
   name,
+  bornBefore,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -390,6 +462,7 @@ export function MouseSelect({
   exclude?: string;
   allowArchived?: boolean;
   name?: string;
+  bornBefore?: string;
 }) {
   const { state } = useApp();
   return (
@@ -404,6 +477,9 @@ export function MouseSelect({
           (m) =>
             m.id !== exclude &&
             (!sex || m.sex === sex) &&
+            (!bornBefore ||
+              (m.dob < bornBefore && m.weaningStatus !== "unweaned") ||
+              m.id === value) &&
             (allowArchived || m.status === "active"),
         )
         .map((m) => (

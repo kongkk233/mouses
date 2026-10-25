@@ -11,7 +11,8 @@ import {
 } from "./Primitives";
 import { MouseSprite } from "./MouseSprite";
 import { litterAppearance, coatLabels } from "../../shared/appearance";
-import { addDays } from "../../shared/dates";
+import { addDays, daysBetween } from "../../shared/dates";
+import { MIN_BIRTH_DATE, EARLY_WEAN_DAYS } from "../../shared/validation";
 
 function lineage(
   state: ReturnType<typeof useApp>["state"],
@@ -279,6 +280,7 @@ export function BreedingUpdateForm({
               </Field>
               <Field label="计时约定与依据" wide>
                 <input
+                  name="convention"
                   value={convention}
                   onChange={(e) => setConvention(e.target.value)}
                   placeholder="如：实验室见栓日记 E0.5"
@@ -332,6 +334,7 @@ export function LitterForm({ data = {} }: { data?: Record<string, any> }) {
       capacityReason: "",
       dobEstimated: false,
       weaningStatus: "unweaned",
+      exceptionReason: "",
     }),
     [seed, setSeed] = useState(Math.floor(Math.random() * 2 ** 30)),
     [choice, setChoice] = useState(0),
@@ -371,6 +374,7 @@ export function LitterForm({ data = {} }: { data?: Record<string, any> }) {
         <Field label="窝号 *">
           <input
             name="code"
+            maxLength={59}
             required
             value={form.code}
             onChange={(e) => set("code", e.target.value)}
@@ -380,6 +384,7 @@ export function LitterForm({ data = {} }: { data?: Record<string, any> }) {
           <input
             name="bornOn"
             type="date"
+            min={MIN_BIRTH_DATE}
             max={state.today}
             required
             value={form.bornOn}
@@ -430,6 +435,7 @@ export function LitterForm({ data = {} }: { data?: Record<string, any> }) {
             value={form.motherId}
             onChange={(v) => set("motherId", v)}
             sex="female"
+            bornBefore={form.bornOn}
             allowArchived
           />
         </Field>
@@ -439,6 +445,7 @@ export function LitterForm({ data = {} }: { data?: Record<string, any> }) {
             value={form.fatherId}
             onChange={(v) => set("fatherId", v)}
             sex="male"
+            bornBefore={form.bornOn}
             allowArchived
           />
         </Field>
@@ -454,6 +461,7 @@ export function LitterForm({ data = {} }: { data?: Record<string, any> }) {
         <Field label="实际寄养母（若有）">
           <MouseSelect
             name="fosterMotherId"
+            bornBefore={form.bornOn}
             value={form.fosterMotherId}
             onChange={(v) => set("fosterMotherId", v)}
             sex="female"
@@ -478,6 +486,18 @@ export function LitterForm({ data = {} }: { data?: Record<string, any> }) {
           </select>
         </Field>
       </div>
+      {count > 0 &&
+        form.weaningStatus === "weaned" &&
+        daysBetween(form.bornOn, state.today) < EARLY_WEAN_DAYS && (
+          <Field label={`低于 ${EARLY_WEAN_DAYS} 日龄断奶的特殊处理原因 *`}>
+            <textarea
+              name="exceptionReason"
+              value={form.exceptionReason}
+              onChange={(e) => set("exceptionReason", e.target.value)}
+              required
+            />
+          </Field>
+        )}
       <div className="row wrap gap-16">
         <label className="checkbox-label">
           <input
@@ -607,7 +627,16 @@ export function LitterEdit({ id }: { id: string }) {
     [foster, setFoster] = useState(l.fosterMotherId || ""),
     [nursing, setNursing] = useState(l.nursing),
     [weanDueOn, setWeanDueOn] = useState(l.weanDueOn || ""),
-    [reason, setReason] = useState("");
+    [reason, setReason] = useState(""),
+    [exceptionReason, setExceptionReason] = useState("");
+  const earlyWeaned =
+    on !== l.bornOn &&
+    state.mice.some(
+      (m) =>
+        m.birthLitterId === id &&
+        m.weaningStatus === "weaned" &&
+        daysBetween(on, m.weanedOn || state.today) < EARLY_WEAN_DAYS,
+    );
   return (
     <FormShell
       title="更正窝次"
@@ -620,6 +649,7 @@ export function LitterEdit({ id }: { id: string }) {
         nursing,
         weanDueOn,
         reason,
+        exceptionReason,
         date: state.today,
       })}
     >
@@ -633,12 +663,25 @@ export function LitterEdit({ id }: { id: string }) {
         <input
           name="bornOn"
           type="date"
+          min={MIN_BIRTH_DATE}
           max={state.today}
           value={on}
           onChange={(e) => setOn(e.target.value)}
           required
         />
       </Field>
+      {earlyWeaned && (
+        <Field
+          label={`更正后断奶日龄低于 ${EARLY_WEAN_DAYS} 天，特殊处理原因 *`}
+        >
+          <textarea
+            name="exceptionReason"
+            value={exceptionReason}
+            onChange={(e) => setExceptionReason(e.target.value)}
+            required
+          />
+        </Field>
+      )}
       <Field label="生物学妈妈">
         <MouseSelect
           name="motherId"

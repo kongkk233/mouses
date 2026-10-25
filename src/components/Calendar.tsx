@@ -292,6 +292,8 @@ export function Calendar({ onBack }: { onBack: () => void }) {
                           <button
                             key={item.id}
                             className={`calendar-chip ${item.kind} ${item.original && item.original < state.today && item.kind === "pending" ? "late" : ""}`}
+                            aria-label={`${item.title} · ${item.kind === "completed" ? "已换" : item.kind === "predicted" ? "预测" : "待换"}`}
+                            title={item.title}
                             onClick={() => {
                               setSelectedDay(d);
                               openItem(item);
@@ -302,7 +304,9 @@ export function Calendar({ onBack }: { onBack: () => void }) {
                             ) : (
                               <span />
                             )}
-                            {item.title}
+                            <strong className="calendar-chip-title">
+                              {item.title}
+                            </strong>
                             <small>
                               {item.kind === "completed"
                                 ? "已换"

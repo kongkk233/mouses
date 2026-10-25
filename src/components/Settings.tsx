@@ -458,17 +458,13 @@ export function SettingsPanel() {
         </Field>
         <Field label="颜色主题">
           <select
-            value={
-              localStorage.getItem("nook-theme") ??
-              "auto"
-            }
+            value={localStorage.getItem("nook-theme") ?? "auto"}
             onChange={(e) => {
               const v = e.target.value;
               localStorage.setItem("nook-theme", v);
               if (v === "auto")
                 document.documentElement.removeAttribute("data-theme");
-              else
-                document.documentElement.setAttribute("data-theme", v);
+              else document.documentElement.setAttribute("data-theme", v);
             }}
           >
             <option value="auto">跟随系统</option>
@@ -510,6 +506,21 @@ export function SettingsPanel() {
           周期模板仅用于新计划，已启用的笼位周期需在“换笼计划”中明确调整。
         </p>
       </FormShell>
+      <section className="settings-backup">
+        <h3 className="spaced-heading">数据备份</h3>
+        <div className="action-row">
+          <a className="button" href="/api/export" download>
+            导出全部资料（JSON）
+          </a>
+          <a className="button" href="/api/backup" download>
+            下载完整备份（SQLite）
+          </a>
+        </div>
+        <p className="field-note">
+          JSON
+          包含档案、关系、照护历史、提醒与设置。完整备份还包含通知配置，可由管理员使用恢复工具还原，请妥善保管。
+        </p>
+      </section>
       <form method="post" action="/session/logout" className="danger-zone">
         <button className="text-button" type="submit">
           退出当前设备

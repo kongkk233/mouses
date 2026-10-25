@@ -26,7 +26,7 @@
 }
 body {
   margin: 0;
-  min-width: 360px;
+  min-width: 0;
   background:
     radial-gradient(ellipse at 92% 10%, #f6eee7 0, transparent 32%),
     radial-gradient(ellipse at 0 50%, #fbf0f0 0, transparent 35%), #fbf7f4;
@@ -3874,7 +3874,7 @@ svg {
 }
 @media (max-width: 720px) {
   body {
-    min-width: 360px;
+    min-width: 0;
   }
   .topbar {
     height: 72px;
@@ -5692,4 +5692,173 @@ html[data-theme="dark"] .family-center > .family-node {
 html[data-theme="dark"] .mobile-tabbar {
   background: #1e1618e8;
   border-color: #3a2828;
+}
+
+.field-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.field-count {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.action-row > a.button {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.cage-title {
+  flex: 1;
+}
+.cage-title strong {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.occupancy {
+  flex-shrink: 0;
+}
+.calendar-chip-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: inherit;
+}
+.detail-intro h1,
+.history-list strong,
+.history-list p,
+.preview-box,
+.form-error {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  input,
+  select,
+  textarea,
+  .filters select,
+  .advanced-filters input,
+  .advanced-filters select,
+  .mobile-search input,
+  .calendar-toolbar select,
+  .drawer-content .field input,
+  .drawer-content .field select,
+  .drawer-content .field textarea {
+    font-size: 16px;
+  }
+  .brand small {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .welcome p,
+  .welcome-stats > div > span,
+  .scene-note,
+  .calendar-legend,
+  .calendar-legend small {
+    font-size: 12px;
+  }
+  .topbar-inner {
+    padding: 0 12px;
+    gap: 6px;
+  }
+  .brand-mark {
+    display: none;
+  }
+  .top-actions {
+    gap: 0;
+  }
+  .icon-button,
+  .calendar-entry,
+  .filter-button {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+  .button,
+  .button.small,
+  .breeding-card .button.small,
+  .text-button,
+  .cage-card-foot button,
+  .calendar-toolbar .segmented > button,
+  .view-tabs button,
+  .checkbox-label {
+    min-height: 44px;
+  }
+  .breeding-card .button.small {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .filters {
+    width: 100%;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+  .filters select,
+  .filters select:nth-child(2) {
+    display: block;
+    flex: 1 1 100px;
+    width: auto;
+    min-height: 44px;
+  }
+  .advanced-filters > .mobile-state-filter {
+    display: none;
+  }
+  .member-identity {
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .member-identity strong,
+  .member-identity > span,
+  .drawer-content .member-identity > span {
+    max-width: 100%;
+  }
+  .member-row .sex-mark {
+    margin-left: 0;
+  }
+  .month-grid {
+    overflow-x: auto;
+  }
+  .week-labels,
+  .days-grid {
+    min-width: 420px;
+  }
+  .day-number,
+  .calendar-day .day-number {
+    height: 44px;
+    min-height: 44px;
+    font-size: 15px;
+  }
+  .day-number > span {
+    font-size: 10px;
+    padding: 0;
+  }
+  .calendar-chip {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .more-day {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .calendar-layout,
+  .calendar-layout > *,
+  .calendar-toolbar > .row,
+  .welcome > * {
+    min-width: 0;
+  }
+  .calendar-toolbar > .row {
+    flex-wrap: wrap;
+  }
+  .results-line {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
