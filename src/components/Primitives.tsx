@@ -22,6 +22,7 @@ import { MouseSprite } from "./MouseSprite";
 import { mouseTags } from "../selectors";
 import { safePhotoLink } from "../../shared/photos";
 import { textLimit } from "../../shared/validation";
+import { useEnvironment } from "../environment";
 export const Badge = ({
   children,
   tone = "muted",
@@ -44,6 +45,7 @@ export function Drawer({
     ref = useRef<HTMLDialogElement>(null),
     shellRef = useRef<HTMLDivElement>(null),
     backRef = useRef(back);
+  const environment = useEnvironment();
   backRef.current = back;
   useEffect(() => {
     const dialog = ref.current!;
@@ -123,7 +125,10 @@ export function Drawer({
                 <ArrowLeft size={20} />
               </button>
             )}
-            <h2>{title}</h2>
+            <h2>
+              {environment.environment === "staging" ? "测试 · " : ""}
+              {title}
+            </h2>
           </div>
           <button className="icon-button" aria-label="关闭面板" onClick={close}>
             <X size={21} />

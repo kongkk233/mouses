@@ -24,6 +24,8 @@ git status --short # 必须已提交且为空
 
 脚本只发布 Git HEAD，VPS 内安装依赖、构建并测试，随后移除开发依赖。源代码、构建结果与版本标识保持一致。激活后在服务器本机以认证请求检查健康接口，并执行首次备份。
 
+管理员控制台与独立测试站见 [双环境说明](ENVIRONMENTS.md)。测试发布使用 `./scripts/deploy.sh oracle mouses-test.ninthflux.com staging`，生产默认使用 `production`；两个环境独立保留 `current`、`previous` 和部署标识。部署脚本自动补齐不同的管理员密码与单向登录密钥，不轮换已有普通访问密码。
+
 首次 Caddy 设置需要把 `deploy/mouses.caddy` 放入 `/etc/caddy/sites/` 并添加对应 import；先 `caddy validate`，成功后 reload。Cloudflare 仅增加 `mouses` 记录，不改变主域、邮件与其他子域。上线后实际验证 HTTPS、认证、页面资源、API 保存、服务重启、备份定时器。
 
 ## 日常操作

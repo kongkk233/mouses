@@ -42,6 +42,7 @@ import { Badge, Empty, MouseRow } from "./components/Primitives";
 import { CageScene, MouseSprite } from "./components/MouseSprite";
 import { Panels } from "./components/Panels";
 import { Calendar } from "./components/Calendar";
+import { AdminEntry } from "./environment";
 
 function CageCard({
   cage,
@@ -440,9 +441,7 @@ export default function App() {
             >
               <Settings size={20} />
             </button>
-            <span className="profile-dot" title="小窝管理员">
-              窝
-            </span>
+            <AdminEntry />
           </nav>
         </div>
       </header>

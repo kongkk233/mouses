@@ -2,6 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "./context";
 import App from "./App";
+import {
+  AdminConsole,
+  EnvironmentBar,
+  EnvironmentProvider,
+} from "./environment";
 import "./styles.css";
 
 // Apply saved theme before first render to avoid flash of wrong colors.
@@ -11,9 +16,16 @@ if (savedTheme === "dark" || savedTheme === "light")
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Provider>
-      <App />
-    </Provider>
+    <EnvironmentProvider>
+      {window.location.pathname === "/admin" ? (
+        <AdminConsole />
+      ) : (
+        <Provider>
+          <EnvironmentBar />
+          <App />
+        </Provider>
+      )}
+    </EnvironmentProvider>
   </StrictMode>,
 );
 if ("serviceWorker" in navigator)

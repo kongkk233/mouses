@@ -1,0 +1,32 @@
+[Unit]
+Description=Mouse Nook isolated administrator test environment
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mouse-nook-test
+Group=mouse-nook-test
+WorkingDirectory=/srv/mouse-nook-test/current
+EnvironmentFile=/etc/mouse-nook-test.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node --max-old-space-size=128 dist-server/server/index.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=75
+StateDirectory=mouse-nook-test
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/mouse-nook-test
+InaccessiblePaths=/var/lib/mouse-nook /etc/mouse-nook.env /srv/mouse-nook
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+MemoryMax=256M
+CPUQuota=25%
+
+[Install]
+WantedBy=multi-user.target

@@ -50,6 +50,7 @@ iPhone 需通过 HTTPS 将应用添加到主屏幕，再在设置里主动开启
 ## 运维与素材
 
 - [部署、备份与回滚](docs/OPERATIONS.md)
+- [管理员与独立测试环境](docs/ENVIRONMENTS.md)
 - [实现与验收计划](docs/IMPLEMENTATION.md)
 - [浏览器性能实测](docs/PERFORMANCE.md)
 - [原创素材与生成提示词](design/ASSETS.md)

@@ -8,6 +8,7 @@ data/
 .DS_Store
 artifacts/
 *.log
+/release.json
 
 
 # The host global ignore pattern Icon? also matches this required PWA directory.

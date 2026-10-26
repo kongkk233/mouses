@@ -1,7 +1,9 @@
 import express from "express";
 import { resolve } from "node:path";
-import { existsSync, writeFileSync, unlinkSync } from "node:fs";
-import { accessGate } from "./access.js";
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { accessGate, requireAdmin } from "./access.js";
+import { loadEnvironment, releaseInfo } from "./environment.js";
+import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { Store } from "./store.js";
 import { DomainError } from "./domain.js";
@@ -10,6 +12,7 @@ import { backup } from "node:sqlite";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 
+const environment = loadEnvironment();
 const app = express(),
   store = new Store(),
   push = new PushService(store);
@@ -30,7 +33,35 @@ app.use((req, res, next) => {
   );
   next();
 });
-app.use(accessGate());
+app.get("/internal/status", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  const expected = Buffer.from(`Bearer ${environment.statusToken}`);
+  const given = Buffer.from(req.headers.authorization || "");
+  if (
+    !environment.statusToken ||
+    expected.length !== given.length ||
+    !timingSafeEqual(expected, given)
+  ) {
+    res.status(404).end();
+    return;
+  }
+  res.json({ ...releaseInfo(environment), healthy: true });
+});
+app.use(accessGate(store.db, environment));
+if (environment.name === "staging")
+  app.get("/manifest.webmanifest", (_req, res) => {
+    const manifest = JSON.parse(
+      readFileSync(resolve("public/manifest.webmanifest"), "utf8"),
+    );
+    res.setHeader("Cache-Control", "no-cache");
+    res.type("application/manifest+json").send({
+      ...manifest,
+      name: "鼠鼠小窝 · 测试环境",
+      short_name: "小窝测试",
+      description: "独立测试资料，不用于正式照护记录",
+      theme_color: "#f4dda7",
+    });
+  });
 app.use("/api", (req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
   if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
@@ -61,6 +92,53 @@ app.get("/api/health", (_req, res) =>
   res.json({ ok: true, service: "mouse-nook" }),
 );
 app.get("/api/state", (_req, res) => res.json(store.snapshot()));
+app.get("/api/session", (_req, res) =>
+  res.json({
+    ...releaseInfo(environment),
+    role: res.locals.role,
+    adminConfigured: !!environment.adminPassword,
+    productionOrigin: environment.productionOrigin,
+    stagingOrigin: res.locals.role === "admin" ? environment.stagingOrigin : "",
+  }),
+);
+app.get("/api/admin/environments", requireAdmin, async (_req, res) => {
+  const current = { ...releaseInfo(environment), healthy: true };
+  let staging: (ReturnType<typeof releaseInfo> & { healthy: boolean }) | null =
+    null;
+  if (environment.name !== "staging" && environment.stagingOrigin) {
+    staging = {
+      environment: "staging",
+      origin: environment.stagingOrigin,
+      version: "unknown",
+      deployedAt: null,
+      pushEnabled: false,
+      healthy: false,
+    };
+    if (environment.stagingStatusUrl && environment.statusToken) {
+      try {
+        const response = await fetch(environment.stagingStatusUrl, {
+          headers: { authorization: `Bearer ${environment.statusToken}` },
+          signal: AbortSignal.timeout(2500),
+          redirect: "error",
+        });
+        if (response.ok) {
+          const value = await response.json();
+          if (
+            value.environment === "staging" &&
+            value.origin === environment.stagingOrigin
+          )
+            staging = {
+              ...staging,
+              version: String(value.version),
+              deployedAt: value.deployedAt,
+              healthy: value.healthy === true,
+            };
+        }
+      } catch {}
+    }
+  }
+  res.json({ environments: [current, ...(staging ? [staging] : [])] });
+});
 app.get("/api/export", (_req, res) => {
   const state = store.snapshot();
   res.attachment(`mouse-nook-${state.today}.json`).json({
@@ -143,7 +221,10 @@ if (existsSync(dist)) {
       },
     }),
   );
-  app.get("/", (_req, res) => res.sendFile(resolve(dist, "index.html")));
+  app.get(["/", "/admin"], (_req, res) => {
+    res.setHeader("Cache-Control", "no-cache");
+    res.sendFile(resolve(dist, "index.html"));
+  });
 }
 app.use((_req, res) => res.status(404).type("text").send("页面或资源不存在"));
 app.use(
